@@ -1,0 +1,14 @@
+.local
+.env*
+.git
+assets/source
+docs/screenshots
+playwright-report
+test-results
+tests
+tests-public
+*.sqlite*
+*.db*
+*.pem
+*.key
+*credentials*.json

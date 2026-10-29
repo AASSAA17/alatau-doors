@@ -1,0 +1,452 @@
+{
+  "capturedAt": "2026-10-28T16:01:12.709Z",
+  "scope": "completion",
+  "source": ".local/presentation-demo.sqlite",
+  "dataset": "visual-v1",
+  "counts": {
+    "products": 12,
+    "users": 5,
+    "requests": 5
+  },
+  "deviceScaleFactor": 1,
+  "checks": [
+    "No browser errors",
+    "No document overflow",
+    "Mobile cabinet links visible",
+    "Mobile record fields visible without horizontal scrolling"
+  ],
+  "captures": [
+    {
+      "locale": "ru",
+      "width": 1440,
+      "height": 1000,
+      "page": "finder-budget",
+      "viewport": "ru/1440/finder-budget-viewport.png",
+      "full": "ru/1440/finder-budget-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "ru",
+      "width": 1440,
+      "height": 1000,
+      "page": "finder-results",
+      "viewport": "ru/1440/finder-results-viewport.png",
+      "full": "ru/1440/finder-results-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "ru",
+      "width": 1440,
+      "height": 1000,
+      "page": "about",
+      "viewport": "ru/1440/about-viewport.png",
+      "full": "ru/1440/about-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "ru",
+      "width": 1440,
+      "height": 1000,
+      "page": "interior-ideas",
+      "viewport": "ru/1440/interior-ideas-viewport.png",
+      "full": "ru/1440/interior-ideas-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "ru",
+      "width": 1440,
+      "height": 1000,
+      "page": "message-preview",
+      "viewport": "ru/1440/message-preview-viewport.png",
+      "full": "ru/1440/message-preview-full.png",
+      "viewportSection": "message-preview"
+    },
+    {
+      "locale": "ru",
+      "width": 1440,
+      "height": 1000,
+      "page": "product-specifications",
+      "viewport": "ru/1440/product-specifications-viewport.png",
+      "full": "ru/1440/product-specifications-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "ru",
+      "width": 1440,
+      "height": 1000,
+      "page": "seller-process",
+      "viewport": "ru/1440/seller-process-viewport.png",
+      "full": "ru/1440/seller-process-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "ru",
+      "width": 768,
+      "height": 1024,
+      "page": "finder-budget",
+      "viewport": "ru/768/finder-budget-viewport.png",
+      "full": "ru/768/finder-budget-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "ru",
+      "width": 768,
+      "height": 1024,
+      "page": "finder-results",
+      "viewport": "ru/768/finder-results-viewport.png",
+      "full": "ru/768/finder-results-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "ru",
+      "width": 768,
+      "height": 1024,
+      "page": "about",
+      "viewport": "ru/768/about-viewport.png",
+      "full": "ru/768/about-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "ru",
+      "width": 768,
+      "height": 1024,
+      "page": "interior-ideas",
+      "viewport": "ru/768/interior-ideas-viewport.png",
+      "full": "ru/768/interior-ideas-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "ru",
+      "width": 768,
+      "height": 1024,
+      "page": "message-preview",
+      "viewport": "ru/768/message-preview-viewport.png",
+      "full": "ru/768/message-preview-full.png",
+      "viewportSection": "message-preview"
+    },
+    {
+      "locale": "ru",
+      "width": 390,
+      "height": 844,
+      "page": "finder-budget",
+      "viewport": "ru/390/finder-budget-viewport.png",
+      "full": "ru/390/finder-budget-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "ru",
+      "width": 390,
+      "height": 844,
+      "page": "finder-results",
+      "viewport": "ru/390/finder-results-viewport.png",
+      "full": "ru/390/finder-results-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "ru",
+      "width": 390,
+      "height": 844,
+      "page": "about",
+      "viewport": "ru/390/about-viewport.png",
+      "full": "ru/390/about-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "ru",
+      "width": 390,
+      "height": 844,
+      "page": "interior-ideas",
+      "viewport": "ru/390/interior-ideas-viewport.png",
+      "full": "ru/390/interior-ideas-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "ru",
+      "width": 390,
+      "height": 844,
+      "page": "message-preview",
+      "viewport": "ru/390/message-preview-viewport.png",
+      "full": "ru/390/message-preview-full.png",
+      "viewportSection": "message-preview"
+    },
+    {
+      "locale": "ru",
+      "width": 390,
+      "height": 844,
+      "page": "product-specifications",
+      "viewport": "ru/390/product-specifications-viewport.png",
+      "full": "ru/390/product-specifications-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "ru",
+      "width": 390,
+      "height": 844,
+      "page": "seller-process",
+      "viewport": "ru/390/seller-process-viewport.png",
+      "full": "ru/390/seller-process-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "ru",
+      "width": 360,
+      "height": 800,
+      "page": "finder-budget",
+      "viewport": "ru/360/finder-budget-viewport.png",
+      "full": "ru/360/finder-budget-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "ru",
+      "width": 360,
+      "height": 800,
+      "page": "finder-results",
+      "viewport": "ru/360/finder-results-viewport.png",
+      "full": "ru/360/finder-results-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "ru",
+      "width": 360,
+      "height": 800,
+      "page": "about",
+      "viewport": "ru/360/about-viewport.png",
+      "full": "ru/360/about-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "ru",
+      "width": 360,
+      "height": 800,
+      "page": "interior-ideas",
+      "viewport": "ru/360/interior-ideas-viewport.png",
+      "full": "ru/360/interior-ideas-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "ru",
+      "width": 360,
+      "height": 800,
+      "page": "message-preview",
+      "viewport": "ru/360/message-preview-viewport.png",
+      "full": "ru/360/message-preview-full.png",
+      "viewportSection": "message-preview"
+    },
+    {
+      "locale": "kk",
+      "width": 1440,
+      "height": 1000,
+      "page": "finder-budget",
+      "viewport": "kk/1440/finder-budget-viewport.png",
+      "full": "kk/1440/finder-budget-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "kk",
+      "width": 1440,
+      "height": 1000,
+      "page": "finder-results",
+      "viewport": "kk/1440/finder-results-viewport.png",
+      "full": "kk/1440/finder-results-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "kk",
+      "width": 1440,
+      "height": 1000,
+      "page": "about",
+      "viewport": "kk/1440/about-viewport.png",
+      "full": "kk/1440/about-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "kk",
+      "width": 1440,
+      "height": 1000,
+      "page": "interior-ideas",
+      "viewport": "kk/1440/interior-ideas-viewport.png",
+      "full": "kk/1440/interior-ideas-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "kk",
+      "width": 1440,
+      "height": 1000,
+      "page": "message-preview",
+      "viewport": "kk/1440/message-preview-viewport.png",
+      "full": "kk/1440/message-preview-full.png",
+      "viewportSection": "message-preview"
+    },
+    {
+      "locale": "kk",
+      "width": 1440,
+      "height": 1000,
+      "page": "product-specifications",
+      "viewport": "kk/1440/product-specifications-viewport.png",
+      "full": "kk/1440/product-specifications-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "kk",
+      "width": 1440,
+      "height": 1000,
+      "page": "seller-process",
+      "viewport": "kk/1440/seller-process-viewport.png",
+      "full": "kk/1440/seller-process-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "kk",
+      "width": 768,
+      "height": 1024,
+      "page": "finder-budget",
+      "viewport": "kk/768/finder-budget-viewport.png",
+      "full": "kk/768/finder-budget-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "kk",
+      "width": 768,
+      "height": 1024,
+      "page": "finder-results",
+      "viewport": "kk/768/finder-results-viewport.png",
+      "full": "kk/768/finder-results-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "kk",
+      "width": 768,
+      "height": 1024,
+      "page": "about",
+      "viewport": "kk/768/about-viewport.png",
+      "full": "kk/768/about-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "kk",
+      "width": 768,
+      "height": 1024,
+      "page": "interior-ideas",
+      "viewport": "kk/768/interior-ideas-viewport.png",
+      "full": "kk/768/interior-ideas-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "kk",
+      "width": 768,
+      "height": 1024,
+      "page": "message-preview",
+      "viewport": "kk/768/message-preview-viewport.png",
+      "full": "kk/768/message-preview-full.png",
+      "viewportSection": "message-preview"
+    },
+    {
+      "locale": "kk",
+      "width": 390,
+      "height": 844,
+      "page": "finder-budget",
+      "viewport": "kk/390/finder-budget-viewport.png",
+      "full": "kk/390/finder-budget-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "kk",
+      "width": 390,
+      "height": 844,
+      "page": "finder-results",
+      "viewport": "kk/390/finder-results-viewport.png",
+      "full": "kk/390/finder-results-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "kk",
+      "width": 390,
+      "height": 844,
+      "page": "about",
+      "viewport": "kk/390/about-viewport.png",
+      "full": "kk/390/about-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "kk",
+      "width": 390,
+      "height": 844,
+      "page": "interior-ideas",
+      "viewport": "kk/390/interior-ideas-viewport.png",
+      "full": "kk/390/interior-ideas-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "kk",
+      "width": 390,
+      "height": 844,
+      "page": "message-preview",
+      "viewport": "kk/390/message-preview-viewport.png",
+      "full": "kk/390/message-preview-full.png",
+      "viewportSection": "message-preview"
+    },
+    {
+      "locale": "kk",
+      "width": 390,
+      "height": 844,
+      "page": "product-specifications",
+      "viewport": "kk/390/product-specifications-viewport.png",
+      "full": "kk/390/product-specifications-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "kk",
+      "width": 390,
+      "height": 844,
+      "page": "seller-process",
+      "viewport": "kk/390/seller-process-viewport.png",
+      "full": "kk/390/seller-process-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "kk",
+      "width": 360,
+      "height": 800,
+      "page": "finder-budget",
+      "viewport": "kk/360/finder-budget-viewport.png",
+      "full": "kk/360/finder-budget-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "kk",
+      "width": 360,
+      "height": 800,
+      "page": "finder-results",
+      "viewport": "kk/360/finder-results-viewport.png",
+      "full": "kk/360/finder-results-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "kk",
+      "width": 360,
+      "height": 800,
+      "page": "about",
+      "viewport": "kk/360/about-viewport.png",
+      "full": "kk/360/about-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "kk",
+      "width": 360,
+      "height": 800,
+      "page": "interior-ideas",
+      "viewport": "kk/360/interior-ideas-viewport.png",
+      "full": "kk/360/interior-ideas-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "kk",
+      "width": 360,
+      "height": 800,
+      "page": "message-preview",
+      "viewport": "kk/360/message-preview-viewport.png",
+      "full": "kk/360/message-preview-full.png",
+      "viewportSection": "message-preview"
+    }
+  ]
+}

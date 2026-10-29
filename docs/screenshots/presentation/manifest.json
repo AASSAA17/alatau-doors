@@ -1,0 +1,451 @@
+{
+  "capturedAt": "2026-10-28T14:31:34.008Z",
+  "source": ".local/presentation-demo.sqlite",
+  "dataset": "visual-v1",
+  "counts": {
+    "products": 12,
+    "users": 5,
+    "requests": 5
+  },
+  "deviceScaleFactor": 1,
+  "checks": [
+    "No browser errors",
+    "No document overflow",
+    "Mobile cabinet links visible",
+    "Mobile record fields visible without horizontal scrolling"
+  ],
+  "captures": [
+    {
+      "locale": "ru",
+      "width": 1440,
+      "height": 1000,
+      "page": "home",
+      "viewport": "ru/1440/home-viewport.png",
+      "full": "ru/1440/home-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "ru",
+      "width": 1440,
+      "height": 1000,
+      "page": "catalog",
+      "viewport": "ru/1440/catalog-viewport.png",
+      "full": "ru/1440/catalog-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "ru",
+      "width": 1440,
+      "height": 1000,
+      "page": "product",
+      "viewport": "ru/1440/product-viewport.png",
+      "full": "ru/1440/product-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "ru",
+      "width": 1440,
+      "height": 1000,
+      "page": "buyer-quote",
+      "viewport": "ru/1440/buyer-quote-viewport.png",
+      "full": "ru/1440/buyer-quote-full.png",
+      "viewportSection": "quote-panel"
+    },
+    {
+      "locale": "ru",
+      "width": 1440,
+      "height": 1000,
+      "page": "admin-products",
+      "viewport": "ru/1440/admin-products-viewport.png",
+      "full": "ru/1440/admin-products-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "ru",
+      "width": 1440,
+      "height": 1000,
+      "page": "seller",
+      "viewport": "ru/1440/seller-viewport.png",
+      "full": "ru/1440/seller-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "ru",
+      "width": 768,
+      "height": 1024,
+      "page": "home",
+      "viewport": "ru/768/home-viewport.png",
+      "full": "ru/768/home-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "ru",
+      "width": 768,
+      "height": 1024,
+      "page": "catalog",
+      "viewport": "ru/768/catalog-viewport.png",
+      "full": "ru/768/catalog-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "ru",
+      "width": 768,
+      "height": 1024,
+      "page": "product",
+      "viewport": "ru/768/product-viewport.png",
+      "full": "ru/768/product-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "ru",
+      "width": 768,
+      "height": 1024,
+      "page": "buyer-quote",
+      "viewport": "ru/768/buyer-quote-viewport.png",
+      "full": "ru/768/buyer-quote-full.png",
+      "viewportSection": "quote-panel"
+    },
+    {
+      "locale": "ru",
+      "width": 768,
+      "height": 1024,
+      "page": "admin-products",
+      "viewport": "ru/768/admin-products-viewport.png",
+      "full": "ru/768/admin-products-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "ru",
+      "width": 768,
+      "height": 1024,
+      "page": "seller",
+      "viewport": "ru/768/seller-viewport.png",
+      "full": "ru/768/seller-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "ru",
+      "width": 390,
+      "height": 844,
+      "page": "home",
+      "viewport": "ru/390/home-viewport.png",
+      "full": "ru/390/home-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "ru",
+      "width": 390,
+      "height": 844,
+      "page": "catalog",
+      "viewport": "ru/390/catalog-viewport.png",
+      "full": "ru/390/catalog-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "ru",
+      "width": 390,
+      "height": 844,
+      "page": "product",
+      "viewport": "ru/390/product-viewport.png",
+      "full": "ru/390/product-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "ru",
+      "width": 390,
+      "height": 844,
+      "page": "buyer-quote",
+      "viewport": "ru/390/buyer-quote-viewport.png",
+      "full": "ru/390/buyer-quote-full.png",
+      "viewportSection": "quote-panel"
+    },
+    {
+      "locale": "ru",
+      "width": 390,
+      "height": 844,
+      "page": "admin-products",
+      "viewport": "ru/390/admin-products-viewport.png",
+      "full": "ru/390/admin-products-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "ru",
+      "width": 390,
+      "height": 844,
+      "page": "seller",
+      "viewport": "ru/390/seller-viewport.png",
+      "full": "ru/390/seller-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "ru",
+      "width": 360,
+      "height": 800,
+      "page": "home",
+      "viewport": "ru/360/home-viewport.png",
+      "full": "ru/360/home-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "ru",
+      "width": 360,
+      "height": 800,
+      "page": "catalog",
+      "viewport": "ru/360/catalog-viewport.png",
+      "full": "ru/360/catalog-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "ru",
+      "width": 360,
+      "height": 800,
+      "page": "product",
+      "viewport": "ru/360/product-viewport.png",
+      "full": "ru/360/product-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "ru",
+      "width": 360,
+      "height": 800,
+      "page": "buyer-quote",
+      "viewport": "ru/360/buyer-quote-viewport.png",
+      "full": "ru/360/buyer-quote-full.png",
+      "viewportSection": "quote-panel"
+    },
+    {
+      "locale": "ru",
+      "width": 360,
+      "height": 800,
+      "page": "admin-products",
+      "viewport": "ru/360/admin-products-viewport.png",
+      "full": "ru/360/admin-products-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "ru",
+      "width": 360,
+      "height": 800,
+      "page": "seller",
+      "viewport": "ru/360/seller-viewport.png",
+      "full": "ru/360/seller-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "kk",
+      "width": 1440,
+      "height": 1000,
+      "page": "home",
+      "viewport": "kk/1440/home-viewport.png",
+      "full": "kk/1440/home-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "kk",
+      "width": 1440,
+      "height": 1000,
+      "page": "catalog",
+      "viewport": "kk/1440/catalog-viewport.png",
+      "full": "kk/1440/catalog-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "kk",
+      "width": 1440,
+      "height": 1000,
+      "page": "product",
+      "viewport": "kk/1440/product-viewport.png",
+      "full": "kk/1440/product-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "kk",
+      "width": 1440,
+      "height": 1000,
+      "page": "buyer-quote",
+      "viewport": "kk/1440/buyer-quote-viewport.png",
+      "full": "kk/1440/buyer-quote-full.png",
+      "viewportSection": "quote-panel"
+    },
+    {
+      "locale": "kk",
+      "width": 1440,
+      "height": 1000,
+      "page": "admin-products",
+      "viewport": "kk/1440/admin-products-viewport.png",
+      "full": "kk/1440/admin-products-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "kk",
+      "width": 1440,
+      "height": 1000,
+      "page": "seller",
+      "viewport": "kk/1440/seller-viewport.png",
+      "full": "kk/1440/seller-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "kk",
+      "width": 768,
+      "height": 1024,
+      "page": "home",
+      "viewport": "kk/768/home-viewport.png",
+      "full": "kk/768/home-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "kk",
+      "width": 768,
+      "height": 1024,
+      "page": "catalog",
+      "viewport": "kk/768/catalog-viewport.png",
+      "full": "kk/768/catalog-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "kk",
+      "width": 768,
+      "height": 1024,
+      "page": "product",
+      "viewport": "kk/768/product-viewport.png",
+      "full": "kk/768/product-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "kk",
+      "width": 768,
+      "height": 1024,
+      "page": "buyer-quote",
+      "viewport": "kk/768/buyer-quote-viewport.png",
+      "full": "kk/768/buyer-quote-full.png",
+      "viewportSection": "quote-panel"
+    },
+    {
+      "locale": "kk",
+      "width": 768,
+      "height": 1024,
+      "page": "admin-products",
+      "viewport": "kk/768/admin-products-viewport.png",
+      "full": "kk/768/admin-products-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "kk",
+      "width": 768,
+      "height": 1024,
+      "page": "seller",
+      "viewport": "kk/768/seller-viewport.png",
+      "full": "kk/768/seller-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "kk",
+      "width": 390,
+      "height": 844,
+      "page": "home",
+      "viewport": "kk/390/home-viewport.png",
+      "full": "kk/390/home-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "kk",
+      "width": 390,
+      "height": 844,
+      "page": "catalog",
+      "viewport": "kk/390/catalog-viewport.png",
+      "full": "kk/390/catalog-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "kk",
+      "width": 390,
+      "height": 844,
+      "page": "product",
+      "viewport": "kk/390/product-viewport.png",
+      "full": "kk/390/product-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "kk",
+      "width": 390,
+      "height": 844,
+      "page": "buyer-quote",
+      "viewport": "kk/390/buyer-quote-viewport.png",
+      "full": "kk/390/buyer-quote-full.png",
+      "viewportSection": "quote-panel"
+    },
+    {
+      "locale": "kk",
+      "width": 390,
+      "height": 844,
+      "page": "admin-products",
+      "viewport": "kk/390/admin-products-viewport.png",
+      "full": "kk/390/admin-products-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "kk",
+      "width": 390,
+      "height": 844,
+      "page": "seller",
+      "viewport": "kk/390/seller-viewport.png",
+      "full": "kk/390/seller-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "kk",
+      "width": 360,
+      "height": 800,
+      "page": "home",
+      "viewport": "kk/360/home-viewport.png",
+      "full": "kk/360/home-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "kk",
+      "width": 360,
+      "height": 800,
+      "page": "catalog",
+      "viewport": "kk/360/catalog-viewport.png",
+      "full": "kk/360/catalog-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "kk",
+      "width": 360,
+      "height": 800,
+      "page": "product",
+      "viewport": "kk/360/product-viewport.png",
+      "full": "kk/360/product-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "kk",
+      "width": 360,
+      "height": 800,
+      "page": "buyer-quote",
+      "viewport": "kk/360/buyer-quote-viewport.png",
+      "full": "kk/360/buyer-quote-full.png",
+      "viewportSection": "quote-panel"
+    },
+    {
+      "locale": "kk",
+      "width": 360,
+      "height": 800,
+      "page": "admin-products",
+      "viewport": "kk/360/admin-products-viewport.png",
+      "full": "kk/360/admin-products-full.png",
+      "viewportSection": "page-top"
+    },
+    {
+      "locale": "kk",
+      "width": 360,
+      "height": 800,
+      "page": "seller",
+      "viewport": "kk/360/seller-viewport.png",
+      "full": "kk/360/seller-full.png",
+      "viewportSection": "page-top"
+    }
+  ]
+}
