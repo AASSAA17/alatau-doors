@@ -34,7 +34,6 @@ const env = {
   DATABASE_URL: ownerUrl,
   BETTER_AUTH_URL: 'https://127.0.0.1:3343',
   BETTER_AUTH_SECRET: randomBytes(48).toString('base64url'),
-  DEMO_INVITE_CODE: randomBytes(32).toString('base64url'),
   DEMO_CREDENTIALS_PATH: resolve(`.local/${dbname}-credentials.json`),
   ALATAU_TEST_PROVIDER: 'postgres',
 };

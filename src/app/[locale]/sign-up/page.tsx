@@ -12,7 +12,7 @@ export default async function Page({
     <div className="shell auth-page">
       <AuthForm
         register
-        invitationRequired={publicDemo}
+        demoRegistration={publicDemo}
         returnToSelection={returnTo === 'selection'}
       />
     </div>

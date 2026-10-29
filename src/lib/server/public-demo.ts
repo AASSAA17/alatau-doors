@@ -1,4 +1,3 @@
-import { createHash, timingSafeEqual } from 'node:crypto';
 import { getDb, getPool } from './db';
 import { publicDemo, maintenance } from './environment';
 import { fail } from './access';
@@ -7,15 +6,6 @@ import type { Mutation } from './schemas';
 export function sharedDemoAccount(email: string) {
   return ['admin', 'seller-a', 'seller-b', 'buyer-a', 'buyer-b'].some(
     (key) => email === `${key}@alatau.demo`,
-  );
-}
-export function validInvite(value: string | null) {
-  if (!value || value.length > 256) return false;
-  return timingSafeEqual(
-    createHash('sha256').update(value).digest(),
-    createHash('sha256')
-      .update(process.env.DEMO_INVITE_CODE || '')
-      .digest(),
   );
 }
 export async function demoLimit(key: string, max: number, seconds: number) {

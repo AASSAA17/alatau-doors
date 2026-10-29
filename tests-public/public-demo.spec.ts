@@ -42,17 +42,17 @@ test.afterAll(async () => {
   await Promise.all(Object.values(sessions).map((c) => c.close()));
 });
 
-test('HTTPS cookies and invitation registration; session and favorite survive a fresh browser context', async ({
+test('HTTPS registration without an invitation; session and favorite survive a fresh browser context', async ({
   browser,
 }) => {
   const c = await browser.newContext({ baseURL: origin, ignoreHTTPSErrors: true });
-  const email = `invited-${Date.now()}@alatau.demo`,
+  const email = `registered-${Date.now()}@alatau.demo`,
     password = randomBytes(24).toString('base64url');
-  const body = { email, password, name: 'Invited Fictional Buyer' };
-  const headers = { Origin: origin, 'x-demo-invite': process.env.DEMO_INVITE_CODE! };
+  const body = { email, password, name: 'Registered Fictional Buyer' };
+  const headers = { Origin: origin };
   expect(
     (
-      await c.request.post('/api/auth/sign-up/email', { data: body, headers: { Origin: origin } })
+      await c.request.post('/api/auth/sign-up/email', { data: body })
     ).status(),
   ).toBe(403);
   expect(
@@ -69,9 +69,13 @@ test('HTTPS cookies and invitation registration; session and favorite survive a 
     ).status(),
   ).toBe(403);
   const page = await c.newPage();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/ru/sign-up');
+  await expect(page.locator('[name=invitation]')).toHaveCount(0);
   await page.goto('/kk/sign-up');
   await expect(page.locator('html')).toHaveAttribute('lang', 'kk');
-  await page.locator('[name=invitation]').fill(process.env.DEMO_INVITE_CODE!);
+  await expect(page.locator('[name=invitation]')).toHaveCount(0);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBeTruthy();
   await page.locator('[name=name]').fill(body.name);
   await page.locator('[name=email]').fill(email);
   await page.locator('[name=password]').fill(password);
@@ -354,4 +358,36 @@ test('distributed write limiter stops bursts and isolates other accounts', async
   expect(
     (await write(sessions['buyer-b'], { action: 'favorite', productId: 'd01', saved: true })).ok(),
   ).toBeTruthy();
+});
+
+test('open registration still enforces the shared daily quota', async ({ browser }) => {
+  test.setTimeout(60000);
+  const context = await browser.newContext({ baseURL: origin, ignoreHTTPSErrors: true });
+  try {
+    let limited = false;
+    let registered = 0;
+    for (let i = 0; i < 11; i++) {
+      const response = await context.request.post('/api/auth/sign-up/email', {
+        headers: { Origin: origin },
+        data: {
+          name: 'Fictional quota test',
+          email: `quota-${randomBytes(12).toString('hex')}@example.test`,
+          password: randomBytes(24).toString('base64url'),
+        },
+      });
+      if (response.status() === 429) {
+        expect((await response.json()).code).toBe('DEMO_LIMIT');
+        limited = true;
+        break;
+      }
+      expect(response.ok()).toBeTruthy();
+      expect((await response.json()).user.role).toBe('BUYER');
+      registered++;
+    }
+    expect(limited).toBe(true);
+    // The first test registered one user; malformed/forged requests spent no quota.
+    expect(registered).toBe(9);
+  } finally {
+    await context.close();
+  }
 });

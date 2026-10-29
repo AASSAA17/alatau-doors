@@ -2,7 +2,7 @@ import { auth } from '@/lib/server/auth';
 import { registerSchema } from '@/lib/server/schemas';
 import { ensureDatabaseMode, getPool } from '@/lib/server/db';
 import { publicDemo } from '@/lib/server/environment';
-import { validInvite, demoLimit, sharedDemoAccount } from '@/lib/server/public-demo';
+import { demoLimit, sharedDemoAccount } from '@/lib/server/public-demo';
 import { boundedText, BodyTooLarge } from '@/lib/server/request-body';
 export const runtime = 'nodejs';
 const allowed = new Set([
@@ -50,15 +50,20 @@ async function handler(request: Request) {
     }
   }
   if (endpoint === 'sign-up/email' && request.method === 'POST') {
-    if (publicDemo) {
-      if (
-        request.headers.get('origin') !== process.env.BETTER_AUTH_URL ||
-        !validInvite(request.headers.get('x-demo-invite'))
-      )
+    if (publicDemo && request.headers.get('origin') !== process.env.BETTER_AUTH_URL)
+      return Response.json({ code: 'FORBIDDEN', message: 'Invalid origin.' }, { status: 403 });
+    // Validate before spending the shared demo quota; role/active are never accepted.
+    try {
+      const parsed = registerSchema.safeParse(await request.clone().json());
+      if (!parsed.success)
         return Response.json(
-          { code: 'DEMO_INVITE', message: 'A valid private demo invitation is required.' },
-          { status: 403 },
+          { message: 'Invalid registration data', code: 'INVALID_INPUT' },
+          { status: 400 },
         );
+    } catch {
+      return Response.json({ message: 'Invalid JSON', code: 'INVALID_INPUT' }, { status: 400 });
+    }
+    if (publicDemo) {
       try {
         await demoLimit('registrations-global', 10, 86400);
       } catch {
@@ -73,16 +78,6 @@ async function handler(request: Request) {
           { code: 'DEMO_LIMIT', message: 'Demo capacity reached.' },
           { status: 429 },
         );
-    }
-    try {
-      const parsed = registerSchema.safeParse(await request.clone().json());
-      if (!parsed.success)
-        return Response.json(
-          { message: 'Invalid registration data', code: 'INVALID_INPUT' },
-          { status: 400 },
-        );
-    } catch {
-      return Response.json({ message: 'Invalid JSON', code: 'INVALID_INPUT' }, { status: 400 });
     }
   }
   return auth.handler(request);

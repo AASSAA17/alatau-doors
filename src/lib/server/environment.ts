@@ -34,6 +34,4 @@ export function validateEnvironment() {
     if (origin.protocol !== 'https:' || origin.origin !== process.env.BETTER_AUTH_URL)
       throw new Error('An exact HTTPS auth origin is required.');
   }
-  if (publicDemo && (!process.env.DEMO_INVITE_CODE || process.env.DEMO_INVITE_CODE.length < 24))
-    throw new Error('Public demo requires a private invitation code.');
 }

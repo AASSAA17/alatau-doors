@@ -8,11 +8,11 @@ import { Feedback, useFeedback } from './shared';
 export function AuthForm({
   register = false,
   returnToSelection = false,
-  invitationRequired = false,
+  demoRegistration = false,
 }: {
   register?: boolean;
   returnToSelection?: boolean;
-  invitationRequired?: boolean;
+  demoRegistration?: boolean;
 }) {
   const t = useTranslations('Workspace');
   const router = useRouter();
@@ -22,6 +22,7 @@ export function AuthForm({
       <p className="eyebrow">ALATAU DOORS</p>
       <h1>{t(register ? 'registerTitle' : 'signInTitle')}</h1>
       <p>{t(register ? 'registerNote' : 'signInNote')}</p>
+      {register && demoRegistration && <p className="demo-caption">{t('demoRegistrationNote')}</p>}
       <form
         className="workspace-form"
         onSubmit={async (e) => {
@@ -33,19 +34,12 @@ export function AuthForm({
             const email = String(data.get('email'));
             const password = String(data.get('password'));
             const result = register
-              ? await authClient.signUp.email(
-                  { name: String(data.get('name')), email, password },
-                  {
-                    headers: invitationRequired
-                      ? { 'x-demo-invite': String(data.get('invitation')) }
-                      : {},
-                  },
-                )
+              ? await authClient.signUp.email({ name: String(data.get('name')), email, password })
               : await authClient.signIn.email({ email, password });
             if (result.error) {
               f.setError(
-                result.error.code === 'DEMO_INVITE'
-                  ? 'DEMO_INVITE'
+                result.error.code === 'DEMO_LIMIT'
+                  ? 'DEMO_LIMIT'
                   : result.error.status === 429
                     ? 'RATE_LIMIT'
                     : 'AUTH_FAILED',
@@ -79,20 +73,6 @@ export function AuthForm({
           }
         }}
       >
-        {register && invitationRequired && (
-          <label>
-            {t('demoInvitation')}
-            <input
-              name="invitation"
-              type="password"
-              required
-              minLength={24}
-              maxLength={256}
-              autoComplete="off"
-            />
-            <small>{t('demoInvitationNote')}</small>
-          </label>
-        )}
         {register && (
           <label>
             {t('name')}

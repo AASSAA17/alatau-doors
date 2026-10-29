@@ -16,7 +16,6 @@ if (!existsSync(configPath))
     JSON.stringify({
       password: randomBytes(32).toString('base64url'),
       secret: randomBytes(48).toString('base64url'),
-      invite: randomBytes(32).toString('base64url'),
     }),
     { mode: 0o600 },
   );

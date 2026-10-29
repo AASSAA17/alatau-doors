@@ -60,7 +60,7 @@ WhatsApp-предпросмотр реализован без внешней о�
 - [x] Проверить существующую архитектуру, npm, Better Auth/SQLite, SSR/API, сессии и ограничения.
 - [x] Сохранить SQLite и изолированную презентацию 3200; добавить async database interface и официальный pg adapter.
 - [x] Добавить явные PostgreSQL migrations с checksum/lock, отдельный fictional seed и независимые пароли.
-- [x] Ввести public-demo, exact HTTPS Origin, безопасные cookies, приглашения, квоты и ограниченный ADMIN.
+- [x] Ввести public-demo, exact HTTPS Origin, безопасные cookies, квоты и ограниченный ADMIN.
 - [x] Разделить owner/direct и runtime/pooled подключения; защитить метки и историю SQL-правами.
 - [x] Подготовить ignore-файлы, env template, Vercel config и GitHub Actions без облачных секретов.
 - [x] Проверить PostgreSQL: 49 сценариев регрессии; отдельно HTTPS, роли SQL, ограничения и полный путь кабинетов.
