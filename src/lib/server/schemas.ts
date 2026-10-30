@@ -59,7 +59,7 @@ export const productSchema = z
       '/images/oak.webp',
       '/images/ivory.webp',
       '/images/graphite.webp',
-    ]),
+    ]).or(z.string().regex(/^\/api\/media\/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/)),
     finish: localized,
     material: localized,
     coating: localized.optional(),

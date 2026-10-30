@@ -14,12 +14,25 @@ const server = https.createServer(
     cert: readFileSync('.local/postgres-test/cert.pem'),
   },
   (req, res) => {
+    // Model the hosting edge's bounded request buffering. Forwarding a still
+    // uploading TLS stream after an early 413 can reset a keep-alive socket.
+    const chunks = [];
+    let size = 0;
+    req.on('data', chunk => {
+      size += chunk.length;
+      if (size <= 5 * 1024 * 1024) chunks.push(chunk);
+    });
+    req.on('end', () => {
+    if (size > 5 * 1024 * 1024) { res.writeHead(413); res.end(); return; }
     const upstream = http.request(
       {
         hostname: '127.0.0.1',
         port: 3300,
         path: req.url,
         method: req.method,
+        // Oversized bodies can be rejected before being consumed; do not reuse
+        // that upstream socket for the next test request.
+        agent: false,
         headers: { ...req.headers, 'x-forwarded-proto': 'https' },
       },
       (response) => {
@@ -28,10 +41,11 @@ const server = https.createServer(
       },
     );
     upstream.on('error', () => {
-      res.writeHead(503);
-      res.end('Starting');
+      if (!res.headersSent) { res.writeHead(503); res.end('Starting'); }
+      else res.destroy();
     });
-    req.pipe(upstream);
+    upstream.end(Buffer.concat(chunks));
+    });
   },
 );
 server.listen(3343, '127.0.0.1');

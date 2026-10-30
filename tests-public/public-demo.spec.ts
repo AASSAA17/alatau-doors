@@ -1,3 +1,4 @@
+import { checkMedia } from '../tests/media-check';
 import { test, expect, type BrowserContext } from '@playwright/test';
 import { randomBytes } from 'node:crypto';
 import { readCredentials } from '../scripts/demo-credentials';
@@ -391,3 +392,5 @@ test('open registration still enforces the shared daily quota', async ({ browser
     await context.close();
   }
 });
+
+test('public demo media uploads enforce staff roles and safe image conversion', async () => { await checkMedia(sessions.admin, sessions['buyer-a'], sessions['seller-a'], origin); });

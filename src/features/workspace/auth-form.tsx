@@ -3,8 +3,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import Image from 'next/image';
 import { authClient } from '@/lib/auth-client';
 import { Link, useRouter } from '@/lib/i18n/navigation';
-import { useSessionState } from '@/store/session';
-import { useFavorites } from '@/store/favorites';
+import { authDestination } from './auth-navigation';
 import { Feedback, useFeedback } from './shared';
 import { PasswordlessForm } from './passwordless-form';
 export function AuthForm({
@@ -13,6 +12,8 @@ export function AuthForm({
   demoRegistration = false,
   googleEnabled = false,
   googleError = false,
+  emailVerificationRequired = false,
+  recoveryEnabled = false,
   emailEnabled = false,
   smsEnabled = false,
 }: {
@@ -21,10 +22,13 @@ export function AuthForm({
   demoRegistration?: boolean;
   googleEnabled?: boolean;
   googleError?: boolean;
+  emailVerificationRequired?: boolean;
+  recoveryEnabled?: boolean;
   emailEnabled?: boolean;
   smsEnabled?: boolean;
 }) {
   const t = useTranslations('Workspace');
+  const security = useTranslations('AccountSecurity');
   const locale = useLocale();
   const router = useRouter();
   const f = useFeedback();
@@ -61,38 +65,29 @@ export function AuthForm({
             const email = String(data.get('email'));
             const password = String(data.get('password'));
             const result = register
-              ? await authClient.signUp.email({ name: String(data.get('name')), email, password })
+              ? await authClient.signUp.email({ name: String(data.get('name')), email, password }, { headers: { 'x-alatau-locale': locale } })
               : await authClient.signIn.email({ email, password });
             if (result.error) {
               f.setError(
-                result.error.code === 'DEMO_LIMIT'
-                  ? 'DEMO_LIMIT'
+                ['DEMO_LIMIT', 'EMAIL_NOT_VERIFIED', 'AUTH_MAIL_UNAVAILABLE'].includes(result.error.code || '')
+                  ? result.error.code!
                   : result.error.status === 429
                     ? 'RATE_LIMIT'
                     : 'AUTH_FAILED',
               );
               return;
             }
-            const me = await fetch('/api/workspace?resource=me', { cache: 'no-store' }).then((r) =>
-              r.json(),
-            );
-            const role = me.actor?.role;
-            if (!me.actor) {
-              f.setError('AUTH_FAILED');
+            if (register && emailVerificationRequired) {
+              router.push('/verify-email?sent=1');
               return;
             }
-            useSessionState.getState().setActor(me.actor);
-            useFavorites.getState().connect(role === 'BUYER' ? me.actor.id : null, me.ids);
-            router.push(
-              role === 'ADMIN'
-                ? '/admin'
-                : role === 'SELLER'
-                  ? '/seller'
-                  : returnToSelection
-                    ? '/selection'
-                    : '/account',
-            );
+            if (result.data && 'twoFactorRedirect' in result.data && result.data.twoFactorRedirect) {
+              router.push('/security?challenge=1');
+              return;
+            }
+            router.push(await authDestination(returnToSelection));
             router.refresh();
+
           } catch {
             f.setError('SERVER_ERROR');
           } finally {
@@ -133,6 +128,8 @@ export function AuthForm({
       >
         {t(register ? 'haveAccount' : 'newAccount')}
       </Link>
+<p>{!register && recoveryEnabled && <Link className="text-link" href="/forgot-password">{security('forgotTitle')}</Link>}</p>
+      {recoveryEnabled && <p><Link className="text-link" href="/verify-email">{security('verifyTitle')}</Link></p>}
       <p className="demo-caption">{t('demoCredentialsNote')}</p>
     </section>
   );

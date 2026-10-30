@@ -12,3 +12,5 @@ tests-public
 *.pem
 *.key
 *credentials*.json
+
+*.adbackup

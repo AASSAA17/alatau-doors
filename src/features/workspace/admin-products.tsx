@@ -1,4 +1,5 @@
 'use client';
+import { ImageUpload } from './image-upload';
 import { useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from '@/lib/i18n/navigation';
@@ -69,6 +70,8 @@ function ProductForm({ product, onClose }: { product: AdminProduct | null; onClo
   const t = useTranslations('Workspace');
   const router = useRouter();
   const f = useFeedback();
+  const [image, setImage] = useState(product?.image || '/images/oak.webp');
+  const [uploading, setUploading] = useState(false);
   const [variants, setVariants] = useState<Partial<DoorVariant>[]>(
     product?.variants || [
       { width: 800, height: 2100, price: 100000, stock: 'DEMO_ORDER', active: true },
@@ -82,6 +85,7 @@ function ProductForm({ product, onClose }: { product: AdminProduct | null; onClo
       className="panel workspace-form"
       onSubmit={async (e) => {
         e.preventDefault();
+        if (uploading) return;
         const data = new FormData(e.currentTarget);
         const str = (key: string) => String(data.get(key) || '');
         const localized = (key: string) => ({ ru: str(`${key}.ru`), kk: str(`${key}.kk`) });
@@ -150,7 +154,8 @@ function ProductForm({ product, onClose }: { product: AdminProduct | null; onClo
         </label>
         <label>
           {t('image')}
-          <select name="image" defaultValue={product?.image || '/images/oak.webp'}>
+          <select name="image" value={image} onChange={e => setImage(e.target.value)}>
+            {image.startsWith('/api/media/') && <option value={image}>{t('uploadedImage')}</option>}
             {['oak', 'ivory', 'graphite', 'hero'].map((n) => (
               <option key={n} value={`/images/${n}.webp`}>
                 {t(`images.${n}`)}
@@ -167,6 +172,7 @@ function ProductForm({ product, onClose }: { product: AdminProduct | null; onClo
           {t('archiveProduct')}
         </label>
       </div>
+      <ImageUpload value={image} onChange={setImage} onBusy={setUploading} />
       {(['finish', 'material', 'coating', 'description'] as const).map((key) => (
         <div className="form-grid" key={key}>
           {(['ru', 'kk'] as const).map((locale) => (
@@ -281,7 +287,7 @@ function ProductForm({ product, onClose }: { product: AdminProduct | null; onClo
       </button>
       <Feedback error={f.error} />
       <div className="form-actions">
-        <button disabled={f.busy} className="primary-button">
+        <button disabled={f.busy || uploading} className="primary-button">
           {t('save')}
         </button>
         <button type="button" className="secondary-button" onClick={onClose}>

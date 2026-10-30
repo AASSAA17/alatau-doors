@@ -1,12 +1,22 @@
 import { headers } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { getActor } from '@/lib/server/access';
+import { AppError, getActor } from '@/lib/server/access';
 import { WorkspaceNavigation } from './navigation';
 import type { Actor, Role } from '@/types/workspace';
 import { SignOutButton } from './shared';
+export async function optionalPageActor(locale: string) {
+  let actor;
+  try { actor = await getActor(await headers()); }
+  catch (error) {
+    if (error instanceof AppError && error.code === 'MFA_REQUIRED') redirect(`/${locale}/security`);
+    if (error instanceof AppError && error.code === 'EMAIL_NOT_VERIFIED') redirect(`/${locale}/verify-email`);
+    throw error;
+  }
+  return actor;
+}
 export async function pageActor(locale: string, roles?: Role[]) {
-  const actor = await getActor(await headers());
+  const actor = await optionalPageActor(locale);
   if (!actor) redirect(`/${locale}/sign-in`);
   if (roles && !roles.includes(actor.role)) notFound();
   return actor;

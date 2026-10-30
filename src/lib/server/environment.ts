@@ -18,6 +18,9 @@ export function validateEnvironment() {
       process.env.ALATAU_DB_TASK)
   )
     throw new Error('Invalid hosted database mode.');
+  if ((process.env.APP_MODE === 'production' || (process.env.VERCEL && process.env.AUTH_SECURITY === 'required')) && (process.env.AUTH_MAIL_PROVIDER !== 'resend' ||
+      !process.env.RESEND_API_KEY || !process.env.AUTH_MAIL_FROM))
+    throw new Error('Configure the verified authentication mail sender before deploying account security.');
   if (postgres) {
     if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is required.');
     const url = new URL(process.env.DATABASE_URL);

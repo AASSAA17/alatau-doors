@@ -2,9 +2,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { productRepository } from '@/lib/catalog';
 import { FavoritesGrid } from '@/features/favorites/favorites-grid';
 import { ProductCard } from '@/components/product-card';
-import { headers } from 'next/headers';
-import { getActor } from '@/lib/server/access';
-import { WorkspaceShell } from '@/features/workspace/shell';
+import { WorkspaceShell, optionalPageActor } from '@/features/workspace/shell';
 export async function generateMetadata({
   params,
 }: {
@@ -27,7 +25,7 @@ export default async function Page({
   setRequestLocale(locale);
   const t = await getTranslations('Favorites');
   const products = await productRepository.list();
-  const actor = await getActor(await headers());
+  const actor = await optionalPageActor(locale);
   const content = (
     <div className={actor?.role === 'BUYER' ? 'favorites-page' : 'shell favorites-page'}>
       <div className="page-heading">

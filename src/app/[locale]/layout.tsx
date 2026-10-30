@@ -14,6 +14,7 @@ import '../storefront.css';
 import '../workspace.css';
 import '../visual-refinement.css';
 import '../completion.css';
+import '../account-security.css';
 export const dynamic = 'force-dynamic';
 export async function generateMetadata({
   params,

@@ -25,9 +25,13 @@
     "cloud:migrate": "node scripts/cloud.mjs migrate",
     "cloud:seed": "node scripts/cloud.mjs seed",
     "cloud:accounts": "node scripts/cloud.mjs accounts",
+    "cloud:mfa-enrollment": "node scripts/cloud.mjs mfa-enrollment",
+    "test:account-security": "node scripts/test-public-demo.mjs --security --build",
     "test:postgres:setup": "node scripts/local-postgres-test.mjs",
     "test:postgres": "node scripts/test-postgres.mjs",
-    "test:public-demo": "node scripts/test-public-demo.mjs --build"
+    "test:public-demo": "node scripts/test-public-demo.mjs --build",
+    "backup": "node scripts/backup.mjs",
+    "test:backups": "node scripts/test-backups.mjs"
   },
   "dependencies": {
     "@fontsource-variable/inter": "5.3.0",
@@ -45,6 +49,7 @@
     "pg": "8.23.1",
     "react": "19.3.1",
     "react-dom": "19.3.1",
+    "sharp": "0.35.5",
     "tailwind-merge": "3.7.0",
     "zod": "4.6.7",
     "zustand": "5.0.16"

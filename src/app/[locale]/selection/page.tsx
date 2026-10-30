@@ -1,11 +1,10 @@
-import { headers } from 'next/headers';
-import { getActor } from '@/lib/server/access';
 import { readProducts, getSettings } from '@/lib/server/products';
 import { readDraft } from '@/lib/server/workspace';
 import { Selection } from '@/features/workspace/selection';
-import { WorkspaceShell } from '@/features/workspace/shell';
-export default async function Page() {
-  const actor = await getActor(await headers());
+import { WorkspaceShell, optionalPageActor } from '@/features/workspace/shell';
+export default async function Page({params}: {params: Promise<{locale:string}>}) {
+  const {locale} = await params;
+  const actor = await optionalPageActor(locale);
   const content = (
     <Selection
       actor={actor}

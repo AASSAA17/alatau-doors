@@ -30,12 +30,17 @@ const ownerUrl = url.toString();
 const env = {
   ...process.env,
   APP_MODE: 'public-demo',
+  AUTH_SECURITY: process.argv.includes('--security') ? 'required' : '',
   DATABASE_PROVIDER: 'postgres',
   DATABASE_URL: ownerUrl,
   BETTER_AUTH_URL: 'https://127.0.0.1:3343',
   BETTER_AUTH_SECRET: randomBytes(48).toString('base64url'),
   DEMO_CREDENTIALS_PATH: resolve(`.local/${dbname}-credentials.json`),
   ALATAU_TEST_PROVIDER: 'postgres',
+  ALATAU_TEST_RUN: dbname,
+  AUTH_MAIL_PROVIDER: 'test',
+  AUTH_TEST_MAIL_DIR: resolve(`.local/${dbname}-mail`),
+  ALATAU_TEST_OWNER_URL: ownerUrl,
 };
 env.ALATAU_TEST_CREDENTIALS = env.DEMO_CREDENTIALS_PATH;
 function run(args, extra = {}) {
@@ -65,6 +70,8 @@ run(['--import', 'tsx', 'scripts/seed.ts'], {
   DEMO_SEED_CONFIRM: 'fictional-data-only',
 });
 const admin = new Pool({ connectionString: ownerUrl });
+// Synthetic accounts in a newly generated, loopback-only test database.
+if (process.argv.includes('--security')) await admin.query('UPDATE "user" SET "emailVerified"=true');
 await admin.query(
   readFileSync('scripts/postgres-runtime-grants.sql', 'utf8').replaceAll('alatau_demo_app', role),
 );
@@ -73,7 +80,7 @@ url.password = password;
 env.DATABASE_URL = url.toString();
 env.ALATAU_DB_TASK = '';
 env.ALATAU_TEST_OWNER_URL = ownerUrl;
-run(['--import', 'tsx', 'scripts/test-entry-methods.ts']);
+if (!process.argv.includes('--security')) run(['--import', 'tsx', 'scripts/test-entry-methods.ts']);
 if (process.argv.includes('--google')) {
   env.GOOGLE_CLIENT_ID = 'local-test.apps.googleusercontent.com';
   env.GOOGLE_CLIENT_SECRET = randomBytes(32).toString('hex');
@@ -85,6 +92,7 @@ for (const sql of [
   "UPDATE app_meta SET value='invalid' WHERE key='publicDemo'",
   'CREATE TABLE forbidden(id int)',
   'DELETE FROM quotes',
+  "INSERT INTO mfa_enrollments(\"userId\",\"tokenHash\",\"expiresAt\") VALUES('x','x',0)",
   "UPDATE request_events SET status='NEW'",
 ]) {
   await assert.rejects(app.query(sql), (error) => error.code === '42501');
@@ -105,6 +113,7 @@ for (const extra of [
   { APP_MODE: 'production' },
   { APP_MODE: 'demo' },
   { DATABASE_PROVIDER: 'sqlite', VERCEL: '1' },
+  { VERCEL: '1', AUTH_SECURITY: 'required', AUTH_MAIL_PROVIDER: 'test' },
   { BETTER_AUTH_URL: 'http://127.0.0.1:3343' },
   { APP_MODE: 'production', DATABASE_PROVIDER: 'sqlite', DATABASE_PATH: guardPath },
 ]) {
@@ -153,7 +162,8 @@ if (!existsSync('.local/postgres-test/cert.pem')) {
   assert.equal(result.status, 0, 'Local HTTPS certificate generation');
 }
 if (process.argv.includes('--build')) run(['node_modules/next/dist/bin/next', 'build']);
-run(['node_modules/@playwright/test/cli.js', 'test', '--config', 'playwright.public.config.ts']);
+run(['node_modules/@playwright/test/cli.js', 'test', '--config', 'playwright.public.config.ts',
+  ...(process.argv.includes('--security') ? ['account-security.spec.ts'] : [])]);
 // Verify the hard account cap under concurrent inserts, independent of HTTP rate limiting.
 const capPool = new Pool({ connectionString: env.DATABASE_URL });
 const insertUser = () => {

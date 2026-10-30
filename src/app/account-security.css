@@ -1,0 +1,6 @@
+.security-material { padding: 1rem; margin-block: 1rem; background: var(--secondary); border: 1px solid var(--border); }
+.security-secret { display: block; overflow-wrap: anywhere; user-select: all; margin-block: 1rem; }
+.security-material ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; padding: 0; list-style: none; }
+.security-material li { overflow-wrap: anywhere; }
+.workspace-form .security-ack { display: flex; align-items: flex-start; gap: .6rem; }
+.workspace-form .security-ack input { width: auto; margin-top: .25rem; }

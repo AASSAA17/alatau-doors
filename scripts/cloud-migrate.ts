@@ -36,6 +36,7 @@ export async function migrateCloud() {
       'demo_limits',
       'entry_limits',
       'guest_inquiries',
+      'twoFactor', 'auth_links', 'mfa_enrollments', 'media',
     ]);
     if (existing.rows.some((r) => !allowed.has(r.tablename)))
       throw new Error('Database is not an empty or recognized Alatau database.');
@@ -45,7 +46,7 @@ export async function migrateCloud() {
     await client.query(
       'CREATE TABLE IF NOT EXISTS schema_migrations (version integer PRIMARY KEY, checksum text NOT NULL, applied_at timestamptz NOT NULL DEFAULT now())',
     );
-    for (const [version, file] of [[1, '001_business.sql'], [2, '002_entry_methods.sql']] as const) {
+    for (const [version, file] of [[1, '001_business.sql'], [2, '002_entry_methods.sql'], [3, '003_account_security.sql'], [4, '004_media.sql']] as const) {
     const sql = readFileSync('migrations/postgres/' + file, 'utf8').replace(/\r\n/g, '\n');
     const checksum = createHash('sha256').update(sql).digest('hex');
     // Old Windows checkouts recorded CRLF bytes. Accept only the two line-ending

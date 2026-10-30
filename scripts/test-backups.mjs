@@ -1,0 +1,42 @@
+import { backupSqlite, backupPostgres, verifyBackup } from './backup.mjs';
+import { randomUUID } from 'node:crypto';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import assert from 'node:assert/strict';
+import Database from 'better-sqlite3';
+import { Pool } from 'pg';
+mkdirSync('.local', { recursive: true });
+const file = resolve(`.local/backup-fixture-${randomUUID()}.sqlite`);
+const sqlite = new Database(file);
+sqlite.pragma('journal_mode=WAL');
+sqlite.exec("CREATE TABLE fixture(id INTEGER PRIMARY KEY, text TEXT, bytes BLOB); INSERT INTO fixture VALUES(1,'Вымышленная запись',x'010203');");
+const archive = await backupSqlite(file);
+const sqliteResult = await verifyBackup(archive);
+assert.equal(sqliteResult.tables.fixture, 1);
+assert.equal(sqlite.prepare('SELECT count(*) AS n FROM fixture').get().n, 1);
+sqlite.close();
+const modified = readFileSync(archive); modified[modified.length - 1] ^= 1;
+const bad = resolve('.local/tampered-' + randomUUID() + '.adbackup'); writeFileSync(bad, modified);
+await assert.rejects(verifyBackup(bad));
+const config = process.env.PG_TEST_ADMIN_URL ? null : JSON.parse(readFileSync('.local/postgres-test/config.json', 'utf8'));
+const connection = process.env.PG_TEST_ADMIN_URL || `postgresql://alatau_test:${config.password}@127.0.0.1:55432/postgres`;
+const url = new URL(connection);
+if (!['127.0.0.1', 'localhost'].includes(url.hostname)) throw new Error('Loopback test only');
+const owner = new Pool({ connectionString: connection });
+const name = 'alatau_backup_test_' + Date.now();
+await owner.query(`CREATE DATABASE "${name}"`);
+url.pathname = '/' + name;
+const fixture = new Pool({ connectionString: url.toString() });
+try {
+  await fixture.query("CREATE TABLE fixture(id integer primary key, text text, bytes bytea); INSERT INTO fixture VALUES(1,'Fictional data',decode('010203','hex')); CREATE TABLE related(id integer REFERENCES fixture(id)); INSERT INTO related VALUES(1);");
+  const pgArchive = await backupPostgres(url.toString());
+  await assert.rejects(verifyBackup(pgArchive, 'postgresql://invalid@remote.example/forbidden'));
+  const pgResult = await verifyBackup(pgArchive, connection);
+  assert.equal(pgResult.tables.fixture, 1); assert.equal(pgResult.tables.related, 1);
+  assert.equal((await fixture.query('SELECT count(*) FROM fixture')).rows[0].count, '1');
+  console.log('Encrypted SQLite/WAL and PostgreSQL backups restored; row counts verified; tampering and remote restore rejected; sources unchanged.');
+} finally {
+  await fixture.end();
+  await owner.query(`DROP DATABASE "${name}"`);
+  await owner.end();
+}

@@ -1,5 +1,5 @@
 import { betterAuth } from 'better-auth';
-import { emailOTP, magicLink, phoneNumber } from 'better-auth/plugins';
+import { emailOTP, magicLink, phoneNumber, twoFactor } from 'better-auth/plugins';
 import { deliverLoginEmail, deliverSms, verifySms, markDeliveryFailure } from './passwordless-delivery';
 import { privateKey } from './entry-limits';
 import { sharedDemoAccount } from './public-demo';
@@ -7,6 +7,8 @@ import { verifyGoogleIdToken, type GoogleProfile } from 'better-auth/social-prov
 import { authDatabase } from './db';
 import { publicDemo, validateEnvironment } from './environment';
 import { googleConfigured, validateGoogleConfiguration } from './google-auth';
+import { accountSecurityRequired } from './auth-policy';
+import { sendAuthMail } from './auth-mail';
 validateEnvironment();
 validateGoogleConfiguration();
 const secret = process.env.BETTER_AUTH_SECRET;
@@ -27,7 +29,7 @@ export const auth = betterAuth({
   baseURL: authOrigin,
   database: authDatabase(),
   trustedOrigins,
-  plugins: [
+  plugins: [twoFactor({ issuer: 'Alatau Doors', twoFactorCookieMaxAge: 300, accountLockout: { enabled: true, maxFailedAttempts: 5, durationSeconds: 900 } }),
     emailOTP({ otpLength: 6, expiresIn: 300, allowedAttempts: 3, storeOTP: { hash: async (otp) => privateKey(otp) },
       sendVerificationOTP: async ({ email, otp, type }, ctx) => {
         if (type !== 'sign-in') throw new Error('UNSUPPORTED_PURPOSE');
@@ -77,7 +79,29 @@ export const auth = betterAuth({
     enabled: true,
     minPasswordLength: 12,
     maxPasswordLength: 128,
-    requireEmailVerification: false,
+    requireEmailVerification: accountSecurityRequired,
+    resetPasswordTokenExpiresIn: 900,
+    revokeSessionsOnPasswordReset: true,
+    sendResetPassword: async ({ user, token }, request) => {
+      // Shared public fixture addresses cannot receive recovery emails.
+      if (publicDemo && user.email.endsWith('@alatau.demo')) return;
+      await sendAuthMail(user, 'reset', token, request);
+    },
+    onPasswordReset: async ({ user }, request) => {
+      // A notification failure must not turn a completed password reset into a reported failure.
+      await sendAuthMail(user, 'password-changed', undefined, request).catch(() => {
+        console.error('Password change notification delivery failed.');
+      });
+    },
+  },
+  emailVerification: {
+    sendOnSignUp: accountSecurityRequired && process.env.ALATAU_DB_TASK !== 'seed',
+    sendOnSignIn: false,
+    autoSignInAfterVerification: false,
+    expiresIn: 900,
+    sendVerificationEmail: async ({ user, token }, request) => {
+      await sendAuthMail(user, 'verify', token, request);
+    },
   },
   user: {
     additionalFields: {
@@ -87,6 +111,7 @@ export const auth = betterAuth({
     },
   },
   session: {
+    additionalFields: { mfaVerified: { type: 'boolean', defaultValue: false, required: false, input: false } },
     expiresIn: publicDemo ? 60 * 60 * 12 : 60 * 60 * 24 * 7,
     cookieCache: { enabled: false },
   },
@@ -103,6 +128,9 @@ export const auth = betterAuth({
       '/sign-in/email': { window: 60, max: process.env.APP_MODE === 'demo' ? 60 : 10 },
       '/sign-up/email': { window: 60, max: 15 },
       '/sign-in/social': { window: 60, max: 10 },
+      '/request-password-reset': { window: 60, max: 3 },
+      '/send-verification-email': { window: 60, max: 3 },
+      '/reset-password': { window: 60, max: 5 },
     },
   },
   databaseHooks: {
@@ -121,7 +149,9 @@ export const auth = betterAuth({
               (user?.role !== 'BUYER' || !user.emailVerified)) return false;
           if (['/sign-in/email-otp', '/magic-link/verify', '/phone-number/verify'].includes(context?.path || '') &&
               (user?.role !== 'BUYER' || sharedDemoAccount(user.email || '') || (context?.path === '/phone-number/verify' ? !user.phoneNumberVerified : !user.emailVerified))) return false;
-          return user?.active ? { data: session } : false;
+          if (!user?.active || (accountSecurityRequired && !user.emailVerified && !(user.role === 'BUYER' && user.phoneNumberVerified))) return false;
+          const verified = ['/two-factor/verify-totp', '/two-factor/verify-backup-code'].includes(context?.path || '');
+          return { data: { ...session, mfaVerified: verified } };
         },
       },
     },

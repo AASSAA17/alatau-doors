@@ -4,6 +4,12 @@
 
 Опубликован отдельный публичный режим **Vercel + Neon PostgreSQL** с ограниченным ADMIN, открытой регистрацией BUYER и независимыми доступами: [alatau-doors-demo.vercel.app](https://alatau-doors-demo.vercel.app/ru). Локальный SQLite и презентация на 3200 сохранены. Инструкция обслуживания: [VERCEL_DEPLOYMENT.md](VERCEL_DEPLOYMENT.md), результаты: [CLOUD_VERIFICATION.md](CLOUD_VERIFICATION.md).
 
+## Подготовка к коммерческой передаче
+
+Добавлены загрузка фотографий из ADMIN и зашифрованные резервные копии с проверкой восстановления. Код подтверждения email, восстановления пароля и MFA объединён с существующими входами; строгий режим публичной демонстрации включается только после готовности почты и сотрудников.
+
+Объём и оставшиеся условия: [SALE_READINESS.md](SALE_READINESS.md). Памятка владельцу: [OWNER_GUIDE.md](OWNER_GUIDE.md). Резервное копирование: [BACKUP_RECOVERY.md](BACKUP_RECOVERY.md). Защита аккаунтов: [ACCOUNT_SECURITY.md](ACCOUNT_SECURITY.md).
+
 ## Локальный запуск
 
 Нужен Node.js 24 LTS. На этом компьютере зависимости, .env.local и демонстрационная база уже подготовлены. Из папки проекта:

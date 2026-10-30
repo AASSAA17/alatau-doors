@@ -341,6 +341,7 @@ export async function mutate(actor: Actor, input: Mutation): Promise<Record<stri
       }
       case 'product': {
         requireRole(actor, ['ADMIN']);
+        if (input.data.image.startsWith('/api/media/') && !await db.prepare('SELECT id FROM media WHERE id=?').get(input.data.image.split('/').pop())) fail('INVALID_INPUT');
         const id = await saveProduct(input.id, input.data);
         await audit(actor, 'product', id);
         return { id };

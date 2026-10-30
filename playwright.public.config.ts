@@ -1,6 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   testDir: './tests-public',
+  testIgnore: process.env.AUTH_SECURITY === 'required' ? undefined : '**/account-security.spec.ts',
   workers: 1,
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
@@ -10,8 +11,9 @@ export default defineConfig({
   use: {
     baseURL: 'https://127.0.0.1:3343',
     ignoreHTTPSErrors: true,
-    trace: 'retain-on-failure',
-    screenshot: 'only-on-failure',
+    // Auth challenges/recovery links must never appear in test artifacts.
+    trace: 'off',
+    screenshot: 'off',
   },
   projects: [{ name: 'public-demo', use: { ...devices['Desktop Chrome'] } }],
   webServer: {

@@ -54,7 +54,7 @@ export async function ensureDatabaseMode() {
       const markers = Object.fromEntries(result.rows.map((r) => [r.key, r.value]));
       if (publicDemo && markers.publicDemo !== 'cloud-v1')
         throw new Error('Not a public demo database.');
-      if (publicDemo) {
+      if (publicDemo || process.env.APP_MODE === 'production') {
         const permissions = await getPool().query(`SELECT
           has_table_privilege(current_user,'public.app_meta','UPDATE') OR
           has_table_privilege(current_user,'public.quotes','DELETE') OR
@@ -62,7 +62,7 @@ export async function ensureDatabaseMode() {
           rolsuper OR rolcreatedb OR rolcreaterole OR rolbypassrls AS unsafe
           FROM pg_roles WHERE rolname=current_user`);
         if (permissions.rows[0]?.unsafe !== false)
-          throw new Error('Public demo requires a restricted database role.');
+          throw new Error('Hosted application requires a restricted database role.');
       }
       if (process.env.APP_MODE === 'production' && (markers.publicDemo || markers.seedComplete))
         throw new Error('Seeded databases cannot run in production.');

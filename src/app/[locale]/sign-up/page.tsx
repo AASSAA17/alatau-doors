@@ -1,3 +1,5 @@
+import { accountSecurityRequired } from '@/lib/server/auth-policy';
+import { mailReady } from '@/lib/server/auth-mail';
 import { AuthForm } from '@/features/workspace/auth-form';
 import { publicDemo } from '@/lib/server/environment';
 import { googleConfigured } from '@/lib/server/google-auth';
@@ -12,7 +14,7 @@ export default async function Page({
   const { returnTo } = await searchParams;
   return (
     <div className="shell auth-page">
-      <AuthForm
+      <AuthForm emailVerificationRequired={accountSecurityRequired} recoveryEnabled={mailReady()}
         register
         emailEnabled={emailLoginReady()}
         smsEnabled={smsLoginReady()}

@@ -1,5 +1,7 @@
 import { test, expect, type Browser, type BrowserContext, type Page } from '@playwright/test';
 import { readCredentials } from '../scripts/demo-credentials';
+import { clearTestAuthRates } from './auth-rate-fixture';
+test.beforeEach(clearTestAuthRates);
 import type { AdminProduct, LineInput, RequestDetail } from '../src/types/workspace';
 const origin = 'http://127.0.0.1:3100';
 type Credential = {
@@ -230,12 +232,17 @@ test('admin forms persist products, variants, users and bilingual contacts', asy
     for (const [key, value] of Object.entries({ name: model, slug: `ui-${suffix}`, sku: `UI-${suffix}`, collection: 'Test', 'finish.ru': 'Тестовая отделка', 'finish.kk': 'Сынақ әрлеуі', 'material.ru': 'Демо материал', 'material.kk': 'Демо материал', 'description.ru': 'Тестовый товар, не предложение магазина.', 'description.kk': 'Сынақ тауары, дүкеннің ұсынысы емес.' })) {
         await form.locator(`[name="${key}"]`).fill(value);
     }
+    await form.locator('input[type=file]').setInputFiles('public/images/ivory.webp');
+    await expect(form.locator('select[name=image]')).toHaveValue(/\/api\/media\//);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await page.screenshot({ path: testInfo.outputPath('admin-photo-upload.png'), fullPage: true });
     await form.getByLabel('Цена полотна, ₸').fill('123456');
     await form.getByLabel('Архивировать товар').check();
     await form.getByRole('button', { name: 'Сохранить', exact: true }).click();
     let row = page.getByRole('row').filter({ hasText: model });
     await expect(row).toContainText(/123\s*456/);
     await row.getByRole('button', { name: 'Редактировать', exact: true }).click();
+    await expect(form.locator('select[name=image]')).toHaveValue(/\/api\/media\//);
     await form.getByLabel('Цена полотна, ₸').fill('135790');
     await form.getByLabel('Вариант активен').uncheck();
     await form.getByRole('button', { name: 'Сохранить', exact: true }).click();
