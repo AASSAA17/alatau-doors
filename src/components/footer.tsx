@@ -7,7 +7,7 @@ export function Footer() {
   const w = useTranslations('Workspace');
   const pathname = usePathname();
   if (/^\/(account|admin|seller|requests|selection|favorites|sign-in|sign-up)(\/|$)/.test(pathname)) return (
-    <footer className="workspace-footer"><div className="shell"><Link href="/" className="footer-brand">ALATAU DOORS</Link><nav aria-label={t('navigation')}><Link href="/catalog">{t('catalog')}</Link><Link href="/contacts">{w('contacts')}</Link></nav><p>{t('demoProject')}</p></div></footer>
+    <footer className="workspace-footer"><div className="shell"><Link href="/" className="footer-brand">ALATAU DOORS</Link><nav aria-label={t('navigation')}><Link href="/catalog">{t('catalog')}</Link><Link href="/contacts">{w('contacts')}</Link><Link href="/privacy">{w('privacy')}</Link></nav><p>{t('demoProject')}</p></div></footer>
   );
   return (
     <footer className="footer">
@@ -58,6 +58,7 @@ export function Footer() {
         </div>
         <div className="footer-bottom">
           <span>{t('copyright')}</span>
+          <Link href="/privacy">{w('privacy')}</Link>
           <span>DESIGNED AROUND YOUR SPACE</span>
         </div>
       </div>

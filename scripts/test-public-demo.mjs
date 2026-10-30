@@ -59,6 +59,12 @@ url.username = role;
 url.password = password;
 env.DATABASE_URL = url.toString();
 env.ALATAU_DB_TASK = '';
+if (process.argv.includes('--google')) {
+  env.GOOGLE_CLIENT_ID = 'local-test.apps.googleusercontent.com';
+  env.GOOGLE_CLIENT_SECRET = randomBytes(32).toString('hex');
+  env.ALATAU_TEST_OWNER_URL = ownerUrl;
+  run(['--import', 'tsx', 'scripts/test-google-auth.ts']);
+}
 const app = new Pool({ connectionString: env.DATABASE_URL });
 for (const sql of [
   "UPDATE app_meta SET value='invalid' WHERE key='publicDemo'",

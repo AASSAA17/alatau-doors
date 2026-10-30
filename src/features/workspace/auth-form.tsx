@@ -1,5 +1,6 @@
 'use client';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
+import Image from 'next/image';
 import { authClient } from '@/lib/auth-client';
 import { Link, useRouter } from '@/lib/i18n/navigation';
 import { useSessionState } from '@/store/session';
@@ -9,12 +10,17 @@ export function AuthForm({
   register = false,
   returnToSelection = false,
   demoRegistration = false,
+  googleEnabled = false,
+  googleError = false,
 }: {
   register?: boolean;
   returnToSelection?: boolean;
   demoRegistration?: boolean;
+  googleEnabled?: boolean;
+  googleError?: boolean;
 }) {
   const t = useTranslations('Workspace');
+  const locale = useLocale();
   const router = useRouter();
   const f = useFeedback();
   return (
@@ -23,6 +29,21 @@ export function AuthForm({
       <h1>{t(register ? 'registerTitle' : 'signInTitle')}</h1>
       <p>{t(register ? 'registerNote' : 'signInNote')}</p>
       {register && demoRegistration && <p className="demo-caption">{t('demoRegistrationNote')}</p>}
+      {googleError && <p className="form-error" role="alert">{t('googleError')}</p>}
+      {googleEnabled && <div className="google-sign-in">
+        <button type="button" className="google-auth-button" disabled={f.busy} onClick={async () => {
+          f.setBusy(true); f.setError('');
+          try {
+            const destination = `/${locale}/${returnToSelection ? 'selection' : 'account'}`;
+            const result = await authClient.signIn.social({provider:'google', callbackURL:destination,
+              newUserCallbackURL:destination, errorCallbackURL:`/${locale}/sign-in?google=error`});
+            if (result.error) { f.setError('AUTH_FAILED'); f.setBusy(false); }
+          } catch { f.setError('SERVER_ERROR'); f.setBusy(false); }
+        }}><Image src="/brand/google-g.png" width={20} height={20} alt="" unoptimized />{t('continueGoogle')}</button>
+        <p className="demo-caption">{t('googleBuyerOnly')}</p>
+        <p className="demo-caption">{t('googleDataNote')} <Link href="/privacy">{t('privacy')}</Link></p>
+        <p className="demo-caption">{t('orPassword')}</p>
+      </div>}
       <form
         className="workspace-form"
         onSubmit={async (e) => {

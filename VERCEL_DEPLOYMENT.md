@@ -203,3 +203,43 @@ npm.cmd run presentation:start
 ```
 
 Откройте `http://127.0.0.1:3200/ru`. Скрипт принудительно выбирает SQLite и отдельный presentation secret, независимо от настроек облачного режима. Миграции и seed при старте не запускаются. Для разработки основной версии — `npm.cmd run dev` с прежним `.env.local`.
+
+## 11. Google-вход для покупателей
+
+Подготовлен в отдельной ветке от текущей демонстрации, без включения email/MFA.
+Оба значения `GOOGLE_CLIENT_ID` и `GOOGLE_CLIENT_SECRET` — только серверные переменные.
+Без них Google-кнопка скрыта, парольный вход работает. Частичная конфигурация останавливает приложение.
+Не добавляйте NEXT_PUBLIC-префикс, секреты в Git или preview-окружения с production-базой.
+
+Google Cloud: отдельный проект Alatau Doors Demo (`united-blend-513209-r8`), без billing.
+OAuth Web application: origin `https://alatau-doors-demo.vercel.app`, единственный callback
+`https://alatau-doors-demo.vercel.app/api/auth/callback/google`.
+Только `openid email profile`, без offline access, Gmail/Drive и дополнительных разрешений.
+Privacy URL: `https://alatau-doors-demo.vercel.app/ru/privacy` (есть казахская версия `/kk/privacy`).
+Использование контактного Gmail организатор согласовал отдельно.
+До принятия Google User Data Policy и создания OAuth-клиента требуется подтверждение владельца.
+После этого сохранить secret в Sensitive Vercel Production env и выполнить redeploy.
+Не публиковать Google-кнопку с тестовым client ID.
+
+Google создаёт только BUYER с подтверждённым Google email. Совпадающий email не объединяет
+парольный аккаунт автоматически. ADMIN/SELLER входят по ранее выданному паролю; Google callback
+для них запрещён, как и для отключённых пользователей. Публичное повышение ролей запрещено.
+Существующая email-регистрация остаётся без обязательной проверки email, согласно выбранной
+владельцем версии demo. Это не является завершённой коммерческой системой безопасности.
+
+PKCE и state-cookie проверяет Better Auth; сервер отдельно проверяет подпись, issuer, audience
+и срок ID token официальной функцией Better Auth. Сырой ID token не сохраняется; access tokens
+шифруются. Callback не принимает клиентские роли, scopes, ID tokens и внешние адреса возврата.
+Новая Google-регистрация использует общий лимит 10/сутки и триггер 50 аккаунтов.
+
+Проверка без подключения к Google и без настоящих данных:
+`node scripts/test-public-demo.mjs --google --build`.
+Тестовый симулятор провайдера существует только в `scripts/test-google-auth.ts`, отказывается
+работать вне новой loopback-базы и не подключается к production. Браузерные проверки перехватывают
+переход на Google до внешнего запроса. Реальный Google-вход проверяется отдельно после настройки
+клиента и согласия владельца тестового Google-аккаунта. Такой тест не заменяется симуляцией.
+
+На телефоне: открыть `/ru/sign-in` в Chrome/Safari, войти выданным облачным email/паролем —
+ADMIN автоматически направляется на `/ru/admin`, SELLER на `/ru/seller`. Для смены роли сначала
+выйти. Доступы показываются только локальным `.local/OPEN-CLOUD-ACCESS.cmd` в исходном проекте;
+передавать их через менеджер паролей, не через Git, сайт или публичный чат.

@@ -1,9 +1,11 @@
-import { auth } from '@/lib/server/auth';
+import { auth, trustedOrigins } from '@/lib/server/auth';
 import { registerSchema } from '@/lib/server/schemas';
 import { ensureDatabaseMode, getPool } from '@/lib/server/db';
 import { publicDemo } from '@/lib/server/environment';
 import { demoLimit, sharedDemoAccount } from '@/lib/server/public-demo';
 import { boundedText, BodyTooLarge } from '@/lib/server/request-body';
+import { googleConfigured } from '@/lib/server/google-auth';
+import { z } from 'zod';
 export const runtime = 'nodejs';
 const allowed = new Set([
   'sign-in/email',
@@ -11,11 +13,15 @@ const allowed = new Set([
   'sign-out',
   'get-session',
   'change-password',
+  'sign-in/social',
+  'callback/google',
 ]);
 async function handler(request: Request) {
   await ensureDatabaseMode();
   const endpoint = new URL(request.url).pathname.split('/api/auth/')[1];
   if (!allowed.has(endpoint)) return Response.json({ code: 'NOT_FOUND' }, { status: 404 });
+  if (['sign-in/social', 'callback/google'].includes(endpoint) && !googleConfigured)
+    return Response.json({ code: 'NOT_FOUND' }, { status: 404 });
   if (publicDemo) {
     try {
       await demoLimit('auth-global', 400, 60);
@@ -35,6 +41,8 @@ async function handler(request: Request) {
     }
   }
   if (request.method === 'POST') {
+    if (!trustedOrigins.includes(request.headers.get('origin') || ''))
+      return Response.json({ code: 'FORBIDDEN' }, { status: 403 });
     try {
       const body = await boundedText(request, 16384);
       request = new Request(request.url, {
@@ -48,6 +56,17 @@ async function handler(request: Request) {
         { status: error instanceof BodyTooLarge ? 413 : 400 },
       );
     }
+  }
+  if (endpoint === 'sign-in/social' && request.method === 'POST') {
+    const localPath = z.string().regex(/^\/(ru|kk)\/(account|selection|sign-in)(\?google=error)?$/);
+    const input = z.object({
+      provider: z.literal('google'), callbackURL: localPath,
+      errorCallbackURL: localPath, newUserCallbackURL: localPath.optional(),
+    }).strict().safeParse(await request.clone().json().catch(() => null));
+    // Browser redirects only: no client-supplied ID tokens, scopes, roles or linking.
+    if (!input.success) return Response.json({ code: 'INVALID_INPUT' }, { status: 400 });
+    const session = await auth.api.getSession({ headers: request.headers });
+    if (session) return Response.json({ code: 'SIGN_OUT_FIRST' }, { status: 409 });
   }
   if (endpoint === 'sign-up/email' && request.method === 'POST') {
     if (publicDemo && request.headers.get('origin') !== process.env.BETTER_AUTH_URL)
@@ -80,7 +99,9 @@ async function handler(request: Request) {
         );
     }
   }
-  return auth.handler(request);
+  const response = await auth.handler(request);
+  response.headers.set('Cache-Control', 'private, no-store');
+  return response;
 }
 export const GET = handler;
 export const POST = handler;
