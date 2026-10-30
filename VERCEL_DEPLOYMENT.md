@@ -217,8 +217,15 @@ OAuth Web application: origin `https://alatau-doors-demo.vercel.app`, единс
 Только `openid email profile`, без offline access, Gmail/Drive и дополнительных разрешений.
 Privacy URL: `https://alatau-doors-demo.vercel.app/ru/privacy` (есть казахская версия `/kk/privacy`).
 Использование контактного Gmail организатор согласовал отдельно.
-До принятия Google User Data Policy и создания OAuth-клиента требуется подтверждение владельца.
-После этого сохранить secret в Sensitive Vercel Production env и выполнить redeploy.
+30 октября 2026 владелец отдельно подтвердил Google User Data Policy, создание OAuth-клиента,
+сохранение ключей в Vercel и тест входа своим Google-аккаунтом. Google Audience: External / In production.
+Оба ключа сохранены как Secret в Vercel Production. Deployment `e1f21c4` успешно опубликован.
+Реальный Google callback проверен: создан BUYER, открыт `/ru/account`. Серверные проверки на Vercel/Neon
+подтвердили регистрацию BUYER, вход ADMIN/SELLER, Secure/HttpOnly/SameSite cookies и полный цикл заявки.
+Созданы только отдельные тестовые покупатели/заявка; существующие данные не сбрасывались.
+Локальная резервная копия OAuth-ключей: `.local/google-oauth.encrypted.json` в исходном проекте.
+Формат AES-256-GCM, HKDF-SHA256 с cloud BETTER_AUTH_SECRET и контекстом `alatau-google-oauth-v1`;
+файл не выводить в чат, не добавлять в Git. Перед сменой cloud secret сохранить доступы безопасно.
 Не публиковать Google-кнопку с тестовым client ID.
 
 Google создаёт только BUYER с подтверждённым Google email. Совпадающий email не объединяет

@@ -20,7 +20,7 @@ test('Google on mobile: localized button, privacy disclosure and restricted redi
   await page.getByRole('button', { name: 'Google арқылы жалғастыру' }).click();
   await expect(page).toHaveURL(/^https:\/\/accounts.google.com\//);
   await page.goto('/ru/sign-in?google=error');
-  await expect(page.getByRole('alert')).toContainText('Не удалось войти');
+  await expect(page.locator('.auth-card').getByRole('alert')).toContainText('Не удалось войти');
   await page.goto('/kk/privacy');
   await expect(page.getByRole('heading', { level: 1 })).toContainText('құпиялылығы');
 });
