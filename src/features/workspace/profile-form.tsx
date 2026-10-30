@@ -5,7 +5,7 @@ import { workspaceRequest } from '@/lib/workspace-client';
 import { authClient } from '@/lib/auth-client';
 import { Feedback, useFeedback } from './shared';
 import type { Actor } from '@/types/workspace';
-export function ProfileForm({ actor, sharedDemo = false }: { actor: Actor; sharedDemo?: boolean }) {
+export function ProfileForm({ actor, sharedDemo = false, hasPassword = true }: { actor: Actor; sharedDemo?: boolean; hasPassword?: boolean }) {
   const t = useTranslations('Workspace');
   const router = useRouter();
   const f = useFeedback();
@@ -56,6 +56,8 @@ export function ProfileForm({ actor, sharedDemo = false }: { actor: Actor; share
       </form>
       {sharedDemo ? (
         <p className="demo-caption">{t('sharedPasswordNote')}</p>
+      ) : !hasPassword ? (
+        <p className="demo-caption">{t('googlePasswordNote')}</p>
       ) : (
         <form
           className="workspace-form panel"
