@@ -1,0 +1,22 @@
+import { test, expect } from '@playwright/test';
+test.use({ trace: 'off', screenshot: 'off' });
+test('Guest application on a phone: RU/KK, consent, persisted receipt, no account or overflow', async ({ page, request }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/ru/sign-up');
+  await page.getByRole('link', { name: 'Оставить заявку без регистрации' }).click();
+  await expect(page.getByRole('heading', { name: 'Заявка без регистрации' })).toBeVisible();
+  await page.getByLabel('Имя', { exact: true }).fill('Демонстрационный посетитель');
+  await page.getByLabel('Email или телефон').fill(`phone-ui-${Date.now()}@example.test`);
+  await page.getByLabel('Какие двери').fill('Две белые межкомнатные двери, демонстрационная заявка.');
+  await page.getByRole('checkbox').check();
+  await page.getByRole('button', { name: 'Сохранить демозаявку' }).click();
+  await expect(page.getByRole('heading', { name: 'Демозаявка сохранена' })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
+  const me = await request.get('/api/workspace?resource=me'); expect((await me.json()).actor).toBeNull();
+  await page.goto('/kk/guest-request');
+  await expect(page.getByRole('heading', { name: 'Тіркелмей өтінім қалдыру' })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
+  await page.goto('/kk/sign-in');
+  await expect(page.getByRole('link', { name: 'Тіркелмей өтінім қалдыру' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Құпиясөзсіз кіру' })).toHaveCount(0);
+});

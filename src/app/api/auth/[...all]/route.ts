@@ -6,6 +6,8 @@ import { demoLimit, sharedDemoAccount } from '@/lib/server/public-demo';
 import { boundedText, BodyTooLarge } from '@/lib/server/request-body';
 import { googleConfigured } from '@/lib/server/google-auth';
 import { z } from 'zod';
+import { passwordlessEndpoints, preparePasswordless } from '@/lib/server/passwordless-policy';
+import { deliveryContext } from '@/lib/server/passwordless-delivery';
 export const runtime = 'nodejs';
 const allowed = new Set([
   'sign-in/email',
@@ -15,6 +17,7 @@ const allowed = new Set([
   'change-password',
   'sign-in/social',
   'callback/google',
+  ...passwordlessEndpoints,
 ]);
 async function handler(request: Request) {
   await ensureDatabaseMode();
@@ -68,6 +71,13 @@ async function handler(request: Request) {
     const session = await auth.api.getSession({ headers: request.headers });
     if (session) return Response.json({ code: 'SIGN_OUT_FIRST' }, { status: 409 });
   }
+  if (passwordlessEndpoints.has(endpoint)) {
+    const session = await auth.api.getSession({ headers: request.headers });
+    if (session) return Response.json({ code: 'SIGN_OUT_FIRST' }, { status: 409 });
+    const prepared = await preparePasswordless(request, endpoint);
+    if (prepared instanceof Response) return prepared;
+    request = prepared;
+  }
   if (endpoint === 'sign-up/email' && request.method === 'POST') {
     if (publicDemo && request.headers.get('origin') !== process.env.BETTER_AUTH_URL)
       return Response.json({ code: 'FORBIDDEN', message: 'Invalid origin.' }, { status: 403 });
@@ -99,7 +109,21 @@ async function handler(request: Request) {
         );
     }
   }
-  const response = await auth.handler(request);
+  let response: Response;
+  const delivery = { failed: false };
+  try { response = await deliveryContext.run(delivery, () => auth.handler(request)); }
+  catch { return Response.json({ code: 'AUTH_FAILED' }, { status: 400 }); }
+  if (delivery.failed) return Response.json({ code: 'DELIVERY_FAILED' }, { status: 503 });
+  if (endpoint === 'email-link') {
+    const location = response.headers.get('location');
+    const destination = location ? new URL(location, request.url) : null;
+    const valid = destination && destination.origin === new URL(request.url).origin &&
+      /^\/(ru|kk)\/(account|selection)$/.test(destination.pathname) && !destination.search;
+    const headers = new Headers(response.headers);
+    headers.delete('location');
+    headers.set('Cache-Control', 'private, no-store');
+    return Response.json(valid ? { destination: destination!.pathname } : { code: 'AUTH_FAILED' }, { status: valid ? 200 : 400, headers });
+  }
   response.headers.set('Cache-Control', 'private, no-store');
   return response;
 }

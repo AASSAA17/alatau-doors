@@ -44,11 +44,11 @@ export function ProfileForm({ actor, sharedDemo = false, hasPassword = true }: {
           {t('phone')}
           <input name="phone" type="tel" defaultValue={actor.phone} maxLength={30} />
         </label>
-        <label>
+        {!actor.email.endsWith('@phone.invalid') && <><label>
           {t('email')}
           <input value={actor.email} readOnly />
         </label>
-        <p>{t('emailFixed')}</p>
+        <p>{t('emailFixed')}</p></>}
         <Feedback error={f.error} success={f.success} />
         <button disabled={f.busy} className="primary-button">
           {t('save')}

@@ -10,6 +10,8 @@ REVOKE ALL ON ALL TABLES IN SCHEMA public FROM alatau_demo_app;
 GRANT SELECT, INSERT, UPDATE, DELETE ON "user", session, account, verification, "rateLimit", favorites, drafts, requests, request_items, products, variants, demo_limits TO alatau_demo_app;
 GRANT SELECT, INSERT ON quotes, request_events, internal_comments, audit_log TO alatau_demo_app;
 GRANT SELECT, UPDATE ON store_settings TO alatau_demo_app;
+GRANT SELECT, INSERT, UPDATE, DELETE ON entry_limits TO alatau_demo_app;
+GRANT SELECT, INSERT, UPDATE ON guest_inquiries TO alatau_demo_app;
 GRANT SELECT ON app_meta TO alatau_demo_app;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO alatau_demo_app;
 COMMIT;

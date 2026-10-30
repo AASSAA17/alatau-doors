@@ -1,7 +1,7 @@
 import { readFileSync, existsSync, mkdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { randomBytes } from 'node:crypto';
+import { randomBytes, createHash } from 'node:crypto';
 import { Pool } from 'pg';
 import assert from 'node:assert/strict';
 import Database from 'better-sqlite3';
@@ -47,6 +47,19 @@ function run(args, extra = {}) {
   if (r.status !== 0) process.exit(r.status || 1);
 }
 run(['--import', 'tsx', 'scripts/cloud-migrate.ts'], { ALATAU_DB_TASK: 'migrate' });
+const migrationDb = new Pool({ connectionString: ownerUrl });
+const initialSql = readFileSync('migrations/postgres/001_business.sql', 'utf8').replace(/\r\n/g, '\n');
+const hashSql = (text) => createHash('sha256').update(text).digest('hex');
+await migrationDb.query('UPDATE schema_migrations SET checksum=$1 WHERE version=1', [hashSql(initialSql.replace(/\n/g, '\r\n'))]);
+run(['--import', 'tsx', 'scripts/cloud-migrate.ts'], { ALATAU_DB_TASK: 'migrate' });
+await migrationDb.query('UPDATE schema_migrations SET checksum=$1 WHERE version=1', ['invalid-migration-fixture']);
+const tampered = spawnSync(process.execPath, ['--import', 'tsx', 'scripts/cloud-migrate.ts'], {
+  env: { ...env, ALATAU_DB_TASK: 'migrate' }, stdio: 'ignore', windowsHide: true,
+});
+assert.notEqual(tampered.status, 0, 'Content mismatch must still fail migration');
+await migrationDb.query('UPDATE schema_migrations SET checksum=$1 WHERE version=1', [hashSql(initialSql)]);
+await migrationDb.end();
+console.log('Migration checksum checks passed: historical CRLF accepted, changed content rejected.');
 run(['--import', 'tsx', 'scripts/seed.ts'], {
   ALATAU_DB_TASK: 'seed',
   DEMO_SEED_CONFIRM: 'fictional-data-only',
@@ -59,6 +72,8 @@ url.username = role;
 url.password = password;
 env.DATABASE_URL = url.toString();
 env.ALATAU_DB_TASK = '';
+env.ALATAU_TEST_OWNER_URL = ownerUrl;
+run(['--import', 'tsx', 'scripts/test-entry-methods.ts']);
 if (process.argv.includes('--google')) {
   env.GOOGLE_CLIENT_ID = 'local-test.apps.googleusercontent.com';
   env.GOOGLE_CLIENT_SECRET = randomBytes(32).toString('hex');

@@ -37,8 +37,7 @@ export function migrateSqliteBusiness() {
   db.exec(
     `CREATE TABLE IF NOT EXISTS schema_migrations (version INTEGER PRIMARY KEY, appliedAt TEXT NOT NULL);`,
   );
-  if (db.prepare('SELECT version FROM schema_migrations WHERE version = 1').get()) return;
-  db.transaction(() => {
+  if (!db.prepare('SELECT version FROM schema_migrations WHERE version = 1').get()) db.transaction(() => {
     db.exec(`
       CREATE TABLE products (id TEXT PRIMARY KEY, slug TEXT NOT NULL UNIQUE, sku TEXT NOT NULL UNIQUE, payload TEXT NOT NULL, archived INTEGER NOT NULL DEFAULT 0, createdAt TEXT NOT NULL, updatedAt TEXT NOT NULL);
       CREATE TABLE variants (id TEXT PRIMARY KEY, productId TEXT NOT NULL REFERENCES products(id), width INTEGER NOT NULL CHECK(width > 0), height INTEGER NOT NULL CHECK(height > 0), price INTEGER NOT NULL CHECK(price >= 0), stock TEXT NOT NULL CHECK(stock IN ('DEMO_AVAILABLE','DEMO_ORDER','DEMO_UNAVAILABLE')), active INTEGER NOT NULL DEFAULT 1);
@@ -70,5 +69,14 @@ export function migrateSqliteBusiness() {
       }),
     );
     db.prepare('INSERT INTO schema_migrations VALUES(1,?)').run(new Date().toISOString());
+  })();
+  if (!db.prepare('SELECT version FROM schema_migrations WHERE version = 2').get()) db.transaction(() => {
+    db.exec(`CREATE TABLE entry_limits (key TEXT PRIMARY KEY, count INTEGER NOT NULL, expires INTEGER NOT NULL);
+      CREATE INDEX entry_limits_expiry ON entry_limits(expires);
+      CREATE TABLE guest_inquiries (id TEXT PRIMARY KEY, name TEXT NOT NULL, contact TEXT NOT NULL, note TEXT NOT NULL,
+      locale TEXT NOT NULL CHECK(locale IN ('ru','kk')), status TEXT NOT NULL CHECK(status IN ('NEW','IN_PROGRESS','COMPLETED','CANCELLED')),
+      sellerId TEXT REFERENCES user(id), createdAt TEXT NOT NULL, updatedAt TEXT NOT NULL, revision INTEGER NOT NULL DEFAULT 1);
+      CREATE INDEX guest_inquiries_seller ON guest_inquiries(sellerId);`);
+    db.prepare('INSERT INTO schema_migrations VALUES(2,?)').run(new Date().toISOString());
   })();
 }

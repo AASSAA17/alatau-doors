@@ -143,9 +143,10 @@ function SelectionForm({
                 {t('createRequest')}
               </button>
             ) : (
-              <Link className="primary-button" href="/sign-in?returnTo=selection" onClick={() => localStorage.setItem(guestDraftKey, JSON.stringify(lines))}>
+                <><Link className="primary-button" href="/sign-in?returnTo=selection" onClick={() => localStorage.setItem(guestDraftKey, JSON.stringify(lines))}>
                 {t('signInToRequest')}
               </Link>
+                <Link className="text-link" href="/guest-request">{t('guestRequest')}</Link></>
             )}
           </div>
         </form>

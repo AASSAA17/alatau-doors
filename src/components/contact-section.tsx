@@ -3,6 +3,7 @@ import { Link } from '@/lib/i18n/navigation';
 import { getSettings } from '@/lib/server/products';
 export async function ContactSection() {
     const t = await getTranslations('Storefront');
+    const entry = await getTranslations('Entry');
     const locale = await getLocale();
     const s = (await getSettings());
     const fields = [
@@ -18,6 +19,7 @@ export async function ContactSection() {
         <Link className="primary-button" href="/selection">
           {t('requestLink')} ↗
         </Link>
+        <p><Link className="text-link" href="/guest-request">{entry('guest')}</Link></p>
       </div>
       {fields.length ? <dl>
         {fields.map(([key, value]) => (<div key={key}>

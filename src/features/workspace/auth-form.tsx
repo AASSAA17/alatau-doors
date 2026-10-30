@@ -6,18 +6,23 @@ import { Link, useRouter } from '@/lib/i18n/navigation';
 import { useSessionState } from '@/store/session';
 import { useFavorites } from '@/store/favorites';
 import { Feedback, useFeedback } from './shared';
+import { PasswordlessForm } from './passwordless-form';
 export function AuthForm({
   register = false,
   returnToSelection = false,
   demoRegistration = false,
   googleEnabled = false,
   googleError = false,
+  emailEnabled = false,
+  smsEnabled = false,
 }: {
   register?: boolean;
   returnToSelection?: boolean;
   demoRegistration?: boolean;
   googleEnabled?: boolean;
   googleError?: boolean;
+  emailEnabled?: boolean;
+  smsEnabled?: boolean;
 }) {
   const t = useTranslations('Workspace');
   const locale = useLocale();
@@ -44,6 +49,7 @@ export function AuthForm({
         <p className="demo-caption">{t('googleDataNote')} <Link href="/privacy">{t('privacy')}</Link></p>
         <p className="demo-caption">{t('orPassword')}</p>
       </div>}
+      <PasswordlessForm emailEnabled={emailEnabled} smsEnabled={smsEnabled} selection={returnToSelection}/>
       <form
         className="workspace-form"
         onSubmit={async (e) => {

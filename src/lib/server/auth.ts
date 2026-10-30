@@ -1,4 +1,8 @@
 import { betterAuth } from 'better-auth';
+import { emailOTP, magicLink, phoneNumber } from 'better-auth/plugins';
+import { deliverLoginEmail, deliverSms, verifySms, markDeliveryFailure } from './passwordless-delivery';
+import { privateKey } from './entry-limits';
+import { sharedDemoAccount } from './public-demo';
 import { verifyGoogleIdToken, type GoogleProfile } from 'better-auth/social-providers';
 import { authDatabase } from './db';
 import { publicDemo, validateEnvironment } from './environment';
@@ -23,6 +27,29 @@ export const auth = betterAuth({
   baseURL: authOrigin,
   database: authDatabase(),
   trustedOrigins,
+  plugins: [
+    emailOTP({ otpLength: 6, expiresIn: 300, allowedAttempts: 3, storeOTP: { hash: async (otp) => privateKey(otp) },
+      sendVerificationOTP: async ({ email, otp, type }, ctx) => {
+        if (type !== 'sign-in') throw new Error('UNSUPPORTED_PURPOSE');
+        try { await deliverLoginEmail(email, otp, 'code', ctx?.headers?.get('x-alatau-locale') || 'ru'); }
+        catch { markDeliveryFailure(); throw new Error('DELIVERY_FAILED'); }
+      } }),
+    magicLink({ expiresIn: 600, storeToken: 'hashed', sendMagicLink: async ({ email, url }, ctx) => {
+      // Put the bearer token in a fragment. A deliberate button click redeems it;
+      // mail scanners and browser history/referrers never receive a GET login token.
+      const source = new URL(url);
+      const locale = ctx?.headers?.get('x-alatau-locale') === 'kk' ? 'kk' : 'ru';
+      const target = new URL(`/${locale}/email-link`, authOrigin);
+      target.hash = source.searchParams.toString();
+      await deliverLoginEmail(email, target.toString(), 'link', locale);
+    } }),
+    phoneNumber({ requireVerification: true, allowedAttempts: 3,
+      phoneNumberValidator: (value) => /^\+7[67]\d{9}$/.test(value),
+      sendOTP: async ({ phoneNumber }) => deliverSms(phoneNumber),
+      verifyOTP: async ({ phoneNumber, code }) => verifySms(phoneNumber, code),
+      signUpOnVerification: { getTempEmail: (phone) => `${privateKey(phone)}@phone.invalid`, getTempName: () => 'Покупатель / Сатып алушы' },
+    }),
+  ],
   logger: { disabled: true },
   onAPIError: { errorURL: `${authOrigin}/ru/sign-in?google=error` },
   socialProviders: googleConfigured ? {
@@ -89,9 +116,11 @@ export const auth = betterAuth({
         before: async (session, context) => {
           // Better Auth's adapter follows its current transaction, including signup.
           const user = (await context?.context.internalAdapter.findUserById(session.userId)) as
-            { active?: boolean; role?: string; emailVerified?: boolean } | null | undefined;
+            { active?: boolean; role?: string; email?: string; emailVerified?: boolean; phoneNumberVerified?: boolean } | null | undefined;
           if (context?.path.startsWith('/callback/') &&
               (user?.role !== 'BUYER' || !user.emailVerified)) return false;
+          if (['/sign-in/email-otp', '/magic-link/verify', '/phone-number/verify'].includes(context?.path || '') &&
+              (user?.role !== 'BUYER' || sharedDemoAccount(user.email || '') || (context?.path === '/phone-number/verify' ? !user.phoneNumberVerified : !user.emailVerified))) return false;
           return user?.active ? { data: session } : false;
         },
       },
@@ -99,13 +128,13 @@ export const auth = betterAuth({
     user: {
       create: {
         before: async (user, context) => {
-          if (context?.path.startsWith('/callback/')) {
-            if (!user.emailVerified) return false;
+          if (context?.path.startsWith('/callback/') || ['/sign-in/email-otp', '/magic-link/verify', '/phone-number/verify'].includes(context?.path || '')) {
+            if (context?.path !== '/phone-number/verify' && !user.emailVerified) return false;
             // Share the existing daily registration quota with password signup.
             const { demoLimit } = await import('./public-demo');
             await demoLimit('registrations-global', 10, 86400);
           }
-          return { data: { ...user, role: 'BUYER', active: true, phone: '' } };
+          return { data: { ...user, role: 'BUYER', active: true, phone: context?.path === '/phone-number/verify' ? String((user as { phoneNumber?: string }).phoneNumber || '') : '' } };
         },
       },
     },

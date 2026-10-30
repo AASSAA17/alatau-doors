@@ -1,5 +1,6 @@
 import { AuthForm } from '@/features/workspace/auth-form';
 import { googleConfigured } from '@/lib/server/google-auth';
+import { emailLoginReady, smsLoginReady } from '@/lib/server/passwordless-delivery';
 export default async function Page({
   searchParams,
 }: {
@@ -11,7 +12,7 @@ export default async function Page({
   const { returnTo, google } = await searchParams;
   return (
     <div className="shell auth-page">
-      <AuthForm returnToSelection={returnTo === 'selection'} googleEnabled={googleConfigured} googleError={google === 'error'}/>
+      <AuthForm emailEnabled={emailLoginReady()} smsEnabled={smsLoginReady()} returnToSelection={returnTo === 'selection'} googleEnabled={googleConfigured} googleError={google === 'error'}/>
     </div>
   );
 }

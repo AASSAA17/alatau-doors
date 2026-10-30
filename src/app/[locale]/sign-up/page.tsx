@@ -1,6 +1,7 @@
 import { AuthForm } from '@/features/workspace/auth-form';
 import { publicDemo } from '@/lib/server/environment';
 import { googleConfigured } from '@/lib/server/google-auth';
+import { emailLoginReady, smsLoginReady } from '@/lib/server/passwordless-delivery';
 export default async function Page({
   searchParams,
 }: {
@@ -13,6 +14,8 @@ export default async function Page({
     <div className="shell auth-page">
       <AuthForm
         register
+        emailEnabled={emailLoginReady()}
+        smsEnabled={smsLoginReady()}
         googleEnabled={googleConfigured}
         demoRegistration={publicDemo}
         returnToSelection={returnTo === 'selection'}

@@ -4,12 +4,17 @@ import { listRequests } from '@/lib/server/workspace';
 import { WorkspaceShell } from './shell';
 import type { Actor } from '@/types/workspace';
 import { formatDate } from '@/lib/utils';
+import { listGuests } from '@/lib/server/guest-inquiries';
+import { getDb } from '@/lib/server/db';
+import { GuestInbox } from './guest-inbox';
 export async function Dashboard({ actor, locale }: {
     actor: Actor;
     locale: string;
 }) {
     const t = await getTranslations('Workspace');
     const requests = (await listRequests(actor));
+    const guests = actor.role === 'BUYER' ? [] : await listGuests(actor);
+    const sellers = actor.role === 'ADMIN' ? await getDb().prepare("SELECT id,name FROM user WHERE role='SELLER' AND active=1 ORDER BY name").all() as { id: string; name: string }[] : [];
     return (<WorkspaceShell actor={actor}>
       <div className="workspace-heading">
         <div>
@@ -71,5 +76,6 @@ export async function Dashboard({ actor, locale }: {
             </tbody>
           </table>
         </div>) : (<div className="workspace-empty">{t('noRequests')}</div>)}
+      {actor.role !== 'BUYER' && <GuestInbox items={guests} sellers={sellers} admin={actor.role === 'ADMIN'}/>}
     </WorkspaceShell>);
 }
