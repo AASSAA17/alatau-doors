@@ -15,6 +15,30 @@ export function mailReady() {
   return ['127.0.0.1', 'localhost'].includes(origin.hostname) &&
     Boolean(process.env.ALATAU_TEST_RUN) && dir.startsWith(resolve('.local') + sep);
 }
+export async function sendVerificationCode(email: string, code: string, locale: string) {
+  if (!mailReady()) throw new Error('AUTH_MAIL_UNAVAILABLE');
+  const ru = locale !== 'kk';
+  const subject = ru ? 'Код подтверждения email — Alatau Doors' : 'Email растау коды — Alatau Doors';
+  const text = `${subject}\n\n${code}\n\n${ru
+    ? 'Код действует 5 минут и используется один раз. Новый код отменяет предыдущий. Никому не сообщайте код. Если вы не регистрировались, проигнорируйте письмо.'
+    : 'Код 5 минут жарамды және бір рет қолданылады. Жаңа код алдыңғысын жояды. Кодты ешкімге бермеңіз. Тіркелмеген болсаңыз, хатты елемеңіз.'}`;
+  const deliver = async () => {
+    if (process.env.AUTH_MAIL_PROVIDER === 'test') {
+      const dir = resolve(/*turbopackIgnore: true*/ process.env.AUTH_TEST_MAIL_DIR!);
+      await mkdir(dir, {recursive:true});
+      await writeFile(resolve(dir, randomUUID() + '.json'), JSON.stringify({to:email, purpose:'verify-code', code, subject, text}), {mode:0o600});
+      return;
+    }
+    const response = await fetch('https://api.resend.com/emails', {
+      method:'POST', signal:AbortSignal.timeout(8000),
+      headers:{Authorization:`Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type':'application/json'},
+      body:JSON.stringify({from:process.env.AUTH_MAIL_FROM, to:[email], subject, text}),
+    });
+    if (!response.ok) throw new Error('MAIL_DELIVERY_FAILED');
+  };
+  if (process.env.VERCEL) waitUntil(deliver().catch(() => { console.error('Verification code delivery failed.'); }));
+  else await deliver();
+}
 export async function sendAuthMail(
   user: { id: string; email: string }, purpose: Purpose, token?: string, request?: Request,
 ) {

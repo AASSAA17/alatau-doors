@@ -15,6 +15,7 @@ GRANT SELECT, INSERT, UPDATE ON guest_inquiries TO alatau_demo_app;
 GRANT SELECT, INSERT, UPDATE, DELETE ON "twoFactor", auth_links TO alatau_demo_app;
 GRANT SELECT, DELETE ON mfa_enrollments TO alatau_demo_app;
 GRANT SELECT, INSERT ON media TO alatau_demo_app;
+GRANT SELECT, INSERT ON demo_payments TO alatau_demo_app;
 GRANT SELECT ON app_meta TO alatau_demo_app;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO alatau_demo_app;
 COMMIT;

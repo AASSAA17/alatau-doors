@@ -1,6 +1,6 @@
 import { Pool } from 'pg';
 import { randomBytes, createHash } from 'node:crypto';
-import { readdirSync, readFileSync } from 'node:fs';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { resolve, sep } from 'node:path';
 import { createOTP } from '@better-auth/utils/otp';
 import { base32 } from '@better-auth/utils/base32';
@@ -24,6 +24,14 @@ export function mailLink(email: string, purpose: string) {
   return found.url as string;
 }
 export function mailToken(email: string, purpose: string) { return new URLSearchParams(new URL(mailLink(email, purpose)).hash.slice(1)).get('token')!; }
+export function mailCode(email: string) {
+  const dir = resolve(process.env.AUTH_TEST_MAIL_DIR!);
+  if (!dir.startsWith(resolve('.local') + sep)) throw new Error('Test mailbox must be local');
+  const found = readdirSync(dir).map(name => ({at:statSync(resolve(dir,name)).mtimeMs, ...JSON.parse(readFileSync(resolve(dir,name),'utf8'))}))
+    .filter(mail => mail.to === email && mail.purpose === 'verify-code').sort((a,b)=>b.at-a.at)[0];
+  if (!found || !/^\d{6}$/.test(found.code)) throw new Error('Expected six-digit test code');
+  return found.code as string;
+}
 export async function grant(id: string, expiresAt = Date.now() + 900000) {
   const code = randomBytes(32).toString('base64url');
   await testSql('INSERT INTO mfa_enrollments("userId","tokenHash","expiresAt") VALUES($1,$2,$3) ON CONFLICT("userId") DO UPDATE SET "tokenHash"=excluded."tokenHash","expiresAt"=excluded."expiresAt"', [id, hash(code), expiresAt]);

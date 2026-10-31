@@ -5,6 +5,7 @@ import { useRouter } from '@/lib/i18n/navigation';
 import { formatPrice, formatDate } from '@/lib/utils';
 import { workspaceRequest } from '@/lib/workspace-client';
 import { LineEditor } from './line-editor';
+import { DemoPayment } from './demo-payment';
 import { Feedback, useFeedback } from './shared';
 import type {
   Actor,
@@ -34,6 +35,7 @@ export function RequestEditor({
   const [comment, setComment] = useState('');
   const staff = actor.role !== 'BUYER';
   const closed = ['COMPLETED', 'CANCELLED'].includes(detail.status);
+  const paid = detail.payments.length > 0;
   const date = (at: string) => formatDate(at, locale, true);
   async function act(action: string, extra: Record<string, unknown> = {}) {
     f.setBusy(true);
@@ -120,7 +122,7 @@ export function RequestEditor({
       )}
       <section className="panel">
         <h2>{t('positions')}</h2>
-        {staff && !closed ? (
+        {staff && !closed && !paid ? (
           <>
             <LineEditor
               lines={lines}
@@ -248,6 +250,7 @@ export function RequestEditor({
           <p>{t('quotePending')}</p>
         )}
       </section>
+      <DemoPayment actor={actor} detail={detail}/>
       {!closed && (
         <section className="panel">
           <h2>{t('actions')}</h2>
@@ -265,6 +268,7 @@ export function RequestEditor({
                   className="secondary-button"
                   disabled={f.busy}
                   onClick={() => void act('status', { status: 'IN_PROGRESS' })}
+                  hidden={paid}
                 >
                   {t('reviseQuote')}
                 </button>

@@ -76,12 +76,16 @@ test('registration cannot elevate role and client totals and identities are reje
     try {
         const email = `buyer-${crypto.randomUUID()}@example.test`;
         const password = 'Test-' + crypto.randomUUID();
-        const forged = await context.request.post('/api/auth/sign-up/email', { data: { name: 'E2E Buyer', email, password, role: 'ADMIN', active: true }, headers: { Origin: origin } });
+        const forged = await context.request.post('/api/auth/sign-up/email', { data: { name: 'E2E Buyer', email, password, phone: '8 (700) 123-45-67', role: 'ADMIN', active: true }, headers: { Origin: origin } });
         expect(forged.status()).toBe(400);
-        const valid = await context.request.post('/api/auth/sign-up/email', { data: { name: 'E2E Buyer', email, password }, headers: { Origin: origin } });
+        for (const phone of [undefined, '12345', '+770012345678', '+12025550123', 'call77001234567']) {
+            expect((await context.request.post('/api/auth/sign-up/email', {data:{name:'E2E Buyer',email,password,phone},headers:{Origin:origin}})).status()).toBe(400);
+        }
+        const valid = await context.request.post('/api/auth/sign-up/email', { data: { name: 'E2E Buyer', email, password, phone: '8 (700) 123-45-67' }, headers: { Origin: origin } });
         expect(valid.ok()).toBeTruthy();
         const me = await (await read(context, 'me')).json();
         expect(me.actor.role).toBe('BUYER');
+        expect(me.actor.phone).toBe('+77001234567');
         expect((await read(context, 'users')).status()).toBe(403);
         for (const extra of [{ buyerId: credential('buyer-b').id }, { sellerId: credential('seller-a').id }, { total: 1 }, { role: 'ADMIN' }])
             expect((await write(context, { action: 'createRequest', lines: [line], note: 'x', ...extra })).status()).toBe(400);
@@ -316,4 +320,57 @@ test('terminal transitions, stale writes, role revocation and disabled account a
         for (const c of [admin, buyer, seller])
             await c.close();
     }
+});
+
+test('demo payment: owner pays latest server quote once, staff see immutable simulation', async ({browser}) => {
+    const buyer=await signed(browser,'buyer-a'), other=await signed(browser,'buyer-b');
+    const admin=await signed(browser,'admin'), seller=await signed(browser,'seller-a');
+    try {
+        const id=await create(buyer);
+        const pay=(quoteId:string,revision:number)=>({action:'demoPay',requestId:id,quoteId,revision,confirm:true});
+        expect((await write(buyer,pay('not-issued',1))).status()).toBe(409);
+        expect((await write(admin,{action:'assign',requestId:id,sellerId:credential('seller-a').id,revision:1})).ok()).toBeTruthy();
+        expect((await write(seller,{action:'quote',requestId:id,revision:2})).ok()).toBeTruthy();
+        let d=await detail(buyer,id);
+        const first=d.quotes[0];
+        expect((await write(other,pay(first.id,d.revision))).status()).toBe(404);
+        expect((await write(seller,pay(first.id,d.revision))).status()).toBe(403);
+        expect((await write(admin,pay(first.id,d.revision))).status()).toBe(403);
+        expect((await write(buyer,{...pay(first.id,d.revision),amount:1})).status()).toBe(400);
+        expect((await write(buyer,{...pay(first.id,d.revision),confirm:false})).status()).toBe(400);
+        expect((await write(seller,{action:'status',requestId:id,status:'IN_PROGRESS',revision:d.revision})).ok()).toBeTruthy();
+        d=await detail(seller,id);
+        expect((await write(seller,{action:'quote',requestId:id,revision:d.revision})).ok()).toBeTruthy();
+        d=await detail(buyer,id);
+        expect((await write(buyer,pay(first.id,d.revision))).status()).toBe(409);
+        expect((await write(buyer,pay(d.quotes[0].id,1))).status()).toBe(409);
+        const page=await buyer.newPage();
+        await page.setViewportSize(test.info().project.name === 'mobile' ? {width:390,height:844} : {width:1440,height:1000});
+        await page.goto(`/ru/requests/${id}`);
+        const panel=page.getByTestId('demo-payment');
+        await expect(panel.getByText('Не оплачено',{exact:true})).toBeVisible();
+        await expect(panel.getByRole('button',{name:'Имитировать оплату'})).toBeDisabled();
+        await panel.getByRole('checkbox').check();
+        await panel.getByRole('button',{name:'Имитировать оплату'}).click();
+        await expect(panel.getByText('Оплачено в деморежиме',{exact:true})).toBeVisible();
+        expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();
+        await panel.screenshot({path:`.local/payment-${test.info().project.name}.png`});
+        const retries=await Promise.all([write(buyer,pay(d.quotes[0].id,d.revision)),write(buyer,pay(d.quotes[0].id,d.revision))]);
+        expect(retries.every(response=>response.ok())).toBeTruthy();
+        const receipts=await Promise.all(retries.map(response=>response.json()));
+        expect(receipts[0].payment.id).toBe(receipts[1].payment.id);
+        for(const c of [buyer,admin,seller]) {
+            const result=await detail(c,id);
+            expect(result.payments).toHaveLength(1);
+            expect(result.payments[0].amount).toBe(d.quotes[0].total);
+            expect(result.events.filter(e=>e.kind==='DEMO_PAID')).toHaveLength(1);
+        }
+        d=await detail(seller,id);
+        expect((await write(seller,{action:'items',requestId:id,lines:[line],revision:d.revision})).status()).toBe(409);
+        expect((await write(seller,{action:'status',requestId:id,status:'IN_PROGRESS',revision:d.revision})).status()).toBe(409);
+        expect((await write(seller,{action:'status',requestId:id,status:'COMPLETED',revision:d.revision})).ok()).toBeTruthy();
+        await page.reload(); await expect(panel.getByText('Оплачено в деморежиме',{exact:true})).toBeVisible();
+        await page.goto(`/kk/requests/${id}`);
+        await expect(page.getByTestId('demo-payment').getByText('Деморежимде төленді',{exact:true})).toBeVisible();
+    } finally {for(const c of [buyer,other,admin,seller]) await c.close();}
 });

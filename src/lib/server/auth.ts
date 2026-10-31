@@ -8,7 +8,8 @@ import { authDatabase } from './db';
 import { publicDemo, validateEnvironment } from './environment';
 import { googleConfigured, validateGoogleConfiguration } from './google-auth';
 import { accountSecurityRequired } from './auth-policy';
-import { sendAuthMail } from './auth-mail';
+import { sendAuthMail, sendVerificationCode } from './auth-mail';
+import { normalizePhone } from '../phone';
 validateEnvironment();
 validateGoogleConfiguration();
 const secret = process.env.BETTER_AUTH_SECRET;
@@ -30,10 +31,14 @@ export const auth = betterAuth({
   database: authDatabase(),
   trustedOrigins,
   plugins: [twoFactor({ issuer: 'Alatau Doors', twoFactorCookieMaxAge: 300, accountLockout: { enabled: true, maxFailedAttempts: 5, durationSeconds: 900 } }),
-    emailOTP({ otpLength: 6, expiresIn: 300, allowedAttempts: 3, storeOTP: { hash: async (otp) => privateKey(otp) },
+    emailOTP({ overrideDefaultEmailVerification: true, otpLength: 6, expiresIn: 300, allowedAttempts: 3, storeOTP: { hash: async (otp) => privateKey(otp) },
       sendVerificationOTP: async ({ email, otp, type }, ctx) => {
-        if (type !== 'sign-in') throw new Error('UNSUPPORTED_PURPOSE');
-        try { await deliverLoginEmail(email, otp, 'code', ctx?.headers?.get('x-alatau-locale') || 'ru'); }
+        if (!['sign-in', 'email-verification'].includes(type)) throw new Error('UNSUPPORTED_PURPOSE');
+        try {
+          const locale = ctx?.headers?.get('x-alatau-locale') || ctx?.request?.headers.get('x-alatau-locale') || 'ru';
+          if (type === 'email-verification') await sendVerificationCode(email, otp, locale);
+          else await deliverLoginEmail(email, otp, 'code', locale);
+        }
         catch { markDeliveryFailure(); throw new Error('DELIVERY_FAILED'); }
       } }),
     magicLink({ expiresIn: 600, storeToken: 'hashed', sendMagicLink: async ({ email, url }, ctx) => {
@@ -99,15 +104,12 @@ export const auth = betterAuth({
     sendOnSignIn: false,
     autoSignInAfterVerification: false,
     expiresIn: 900,
-    sendVerificationEmail: async ({ user, token }, request) => {
-      await sendAuthMail(user, 'verify', token, request);
-    },
   },
   user: {
     additionalFields: {
       role: { type: 'string', required: true, defaultValue: 'BUYER', input: false },
       active: { type: 'boolean', required: true, defaultValue: true, input: false },
-      phone: { type: 'string', required: false, defaultValue: '', input: false },
+      phone: { type: 'string', required: false, defaultValue: '', input: true },
     },
   },
   session: {
@@ -164,7 +166,8 @@ export const auth = betterAuth({
             const { demoLimit } = await import('./public-demo');
             await demoLimit('registrations-global', 10, 86400);
           }
-          return { data: { ...user, role: 'BUYER', active: true, phone: context?.path === '/phone-number/verify' ? String((user as { phoneNumber?: string }).phoneNumber || '') : '' } };
+          const contactPhone = context?.path === '/sign-up/email' ? normalizePhone(String((user as { phone?: string }).phone || '')) || '' : '';
+          return { data: { ...user, role: 'BUYER', active: true, phone: context?.path === '/phone-number/verify' ? String((user as { phoneNumber?: string }).phoneNumber || '') : contactPhone } };
         },
       },
     },

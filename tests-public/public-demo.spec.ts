@@ -49,7 +49,7 @@ test('HTTPS registration without an invitation; session and favorite survive a f
   const c = await browser.newContext({ baseURL: origin, ignoreHTTPSErrors: true });
   const email = `registered-${Date.now()}@alatau.demo`,
     password = randomBytes(24).toString('base64url');
-  const body = { email, password, name: 'Registered Fictional Buyer' };
+  const body = { email, password, name: 'Registered Fictional Buyer', phone: '+77001234567' };
   const headers = { Origin: origin };
   expect(
     (
@@ -80,6 +80,7 @@ test('HTTPS registration without an invitation; session and favorite survive a f
   await page.locator('[name=name]').fill(body.name);
   await page.locator('[name=email]').fill(email);
   await page.locator('[name=password]').fill(password);
+  await page.locator('[name=phone]').fill(body.phone);
   await page.locator('form button[type=submit], form button.primary-button').click();
   await expect(page).toHaveURL('/kk/account');
   expect((await (await read(c, 'me')).json()).actor.role).toBe('BUYER');
@@ -169,9 +170,17 @@ test('BUYER → ADMIN → SELLER → BUYER over HTTPS; competing revisions and p
   await expect(page.getByTestId('saved-quote-total')).toBeVisible();
   await expect(page.locator('body')).not.toContainText('PUBLIC_TEST_PRIVATE_SENTINEL');
   await page.close();
+  const simulated = await Promise.all([1,2].map(() => write(buyer, {action:'demoPay',requestId:id,quoteId:result.quotes[0].id,revision:result.revision,confirm:true})));
+  expect(simulated.every(response=>response.ok())).toBeTruthy();
+  const paid=await detail(buyer,id);
+  expect(paid.payments).toHaveLength(1);
+  expect(paid.payments[0].amount).toBe(result.quotes[0].total);
+  expect(paid.events.filter(event=>event.kind==='DEMO_PAID')).toHaveLength(1);
+  expect((await detail(admin,id)).payments).toEqual(paid.payments);
+  expect((await detail(seller,id)).payments).toEqual(paid.payments);
   expect(
     (
-      await write(seller, { action: 'status', requestId: id, status: 'COMPLETED', revision: 3 })
+      await write(seller, { action: 'status', requestId: id, status: 'COMPLETED', revision: paid.revision })
     ).ok(),
   ).toBeTruthy();
   expect((await detail(buyer, id)).status).toBe('COMPLETED');
@@ -337,6 +346,8 @@ test('large valid totals round-trip as numbers; old quotes survive catalogue edi
     ).ok(),
   ).toBeTruthy();
   expect((await detail(buyer, id)).quotes).toEqual(before.quotes);
+  expect((await write(buyer,{action:'demoPay',requestId:id,quoteId:before.quotes[0].id,revision:before.revision,confirm:true})).ok()).toBeTruthy();
+  expect((await detail(buyer,id)).payments[0].amount).toBe(6000000000);
 });
 
 test('distributed write limiter stops bursts and isolates other accounts', async () => {
@@ -371,7 +382,7 @@ test('open registration still enforces the shared daily quota', async ({ browser
       const response = await context.request.post('/api/auth/sign-up/email', {
         headers: { Origin: origin },
         data: {
-          name: 'Fictional quota test',
+          name: 'Fictional quota test', phone: '+77001234567',
           email: `quota-${randomBytes(12).toString('hex')}@example.test`,
           password: randomBytes(24).toString('base64url'),
         },

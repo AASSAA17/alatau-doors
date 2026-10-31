@@ -92,6 +92,8 @@ for (const sql of [
   "UPDATE app_meta SET value='invalid' WHERE key='publicDemo'",
   'CREATE TABLE forbidden(id int)',
   'DELETE FROM quotes',
+  'DELETE FROM demo_payments',
+  'UPDATE demo_payments SET amount=1',
   "INSERT INTO mfa_enrollments(\"userId\",\"tokenHash\",\"expiresAt\") VALUES('x','x',0)",
   "UPDATE request_events SET status='NEW'",
 ]) {

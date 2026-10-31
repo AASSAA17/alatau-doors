@@ -6,6 +6,7 @@ import { Link, useRouter } from '@/lib/i18n/navigation';
 import { authDestination } from './auth-navigation';
 import { Feedback, useFeedback } from './shared';
 import { PasswordlessForm } from './passwordless-form';
+import { normalizePhone } from '@/lib/phone';
 export function AuthForm({
   register = false,
   returnToSelection = false,
@@ -64,8 +65,10 @@ export function AuthForm({
           try {
             const email = String(data.get('email'));
             const password = String(data.get('password'));
+            const phone = register ? normalizePhone(String(data.get('phone'))) : null;
+            if (register && !phone) { f.setError('INVALID_PHONE'); return; }
             const result = register
-              ? await authClient.signUp.email({ name: String(data.get('name')), email, password }, { headers: { 'x-alatau-locale': locale } })
+              ? await authClient.signUp.email({ name: String(data.get('name')), email, password, phone: phone! }, { headers: { 'x-alatau-locale': locale } })
               : await authClient.signIn.email({ email, password });
             if (result.error) {
               f.setError(
@@ -101,6 +104,7 @@ export function AuthForm({
             <input name="name" required minLength={2} maxLength={100} autoComplete="name" />
           </label>
         )}
+        {register && <><label>{t('phone')}<input name="phone" type="tel" required maxLength={30} autoComplete="tel" placeholder="+7 700 123 45 67" aria-describedby="registration-phone-hint"/></label><small id="registration-phone-hint">{t('registrationPhoneHint')}</small></>}
         <label>
           {t('email')}
           <input name="email" type="email" required maxLength={254} autoComplete="email" />

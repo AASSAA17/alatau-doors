@@ -1,30 +1,31 @@
 import { test, expect, type BrowserContext } from '@playwright/test';
 import { randomBytes } from 'node:crypto';
-import { headers, origin, testSql, clearRates, mailToken, mailLink, hash, grant, totp, enroll } from './security-helpers';
+import { headers, origin, testSql, clearRates, mailToken, mailLink, mailCode, grant, totp, enroll } from './security-helpers';
 import { readCredentials } from '../scripts/demo-credentials';
 import { checkMedia } from '../tests/media-check';
 const accounts = readCredentials(process.env.ALATAU_TEST_CREDENTIALS!);
 const seed = (role: string) => accounts.find(c => c.role === role)!;
-const post = (c: BrowserContext, endpoint: string, data: unknown, extra = {}) => c.request.post('/api/auth/' + endpoint, {headers:{...headers,...extra},data});
+const post = (c: BrowserContext, endpoint: string, data: unknown, extra = {}) => c.request.post('/api/auth/' + endpoint, {headers:{...headers,...extra},data:endpoint === 'sign-up/email' ? {phone:'+77001234567', ...(data as object)} : data});
 const me = (c: BrowserContext) => c.request.get('/api/workspace?resource=requests');
 test.describe.configure({mode:'serial'});
 
-test('email verification is required, single-use, localized and bound to the link', async ({browser}) => {
+test('email verification is required, single-use, localized and bound to the email code', async ({browser}) => {
   const c = await browser.newContext({baseURL:origin,ignoreHTTPSErrors:true});
   const email = `verify-${Date.now()}@example.test`, password = randomBytes(24).toString('hex');
   expect((await post(c,'sign-up/email',{name:'Security Test',email,password},{'x-alatau-locale':'kk'})).ok()).toBeTruthy();
   expect((await me(c)).status()).toBe(401);
   expect((await post(c,'sign-in/email',{email,password})).status()).toBe(403);
-  const token = mailToken(email,'verify');
-  const check = (value: string) => c.request.post('/api/account/verify-email',{headers,data:{token:value}});
+  const token = mailCode(email);
+  const check = (value: string) => post(c,'email-otp/verify-email',{email,otp:value});
   expect((await check(token + 'x')).status()).toBe(400);
   expect((await c.request.get('/api/auth/verify-email?token=invalid')).status()).toBe(404);
   const page = await c.newPage(); await page.setViewportSize({width:390,height:844});
-  await page.goto(mailLink(email,'verify'));
+  await page.goto('/kk/verify-email');
+  await page.locator('[name=email]').fill(email); await page.locator('[name=code]').fill(token);
   await expect(page.locator('html')).toHaveAttribute('lang','kk');
   await expect.poll(() => new URL(page.url()).hash).toBe('');
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();
-  await page.locator('form button').click();
+  await page.locator('form .primary-button').click();
   await expect(page.getByText('Email расталды.',{exact:false})).toBeVisible();
   expect((await check(token)).status()).toBe(400);
   expect((await post(c,'sign-in/email',{email,password})).ok()).toBeTruthy();
@@ -32,14 +33,14 @@ test('email verification is required, single-use, localized and bound to the lin
   await c.close();
 });
 
-test('expired verification links fail and verification state is enforced on existing sessions', async ({browser}) => {
+test('expired verification codes fail and verification state is enforced on existing sessions', async ({browser}) => {
   await clearRates();
   const c = await browser.newContext({baseURL:origin,ignoreHTTPSErrors:true});
   const email = `expired-${Date.now()}@example.test`,password=randomBytes(24).toString('hex');
   expect((await post(c,'sign-up/email',{name:'Expired Link',email,password})).ok()).toBeTruthy();
-  const token=mailToken(email,'verify');
-  await testSql('UPDATE auth_links SET "expiresAt"=0 WHERE id=$1',[hash(token)]);
-  expect((await c.request.post('/api/account/verify-email',{headers,data:{token}})).status()).toBe(400);
+  const token=mailCode(email);
+  await testSql('UPDATE verification SET "expiresAt"=now()-interval \'1 minute\' WHERE identifier=$1',['email-verification-otp-'+email]);
+  expect((await post(c,'email-otp/verify-email',{email,otp:token})).status()).toBe(400);
   const buyer=seed('BUYER');
   expect((await post(c,'sign-in/email',{email:buyer.email,password:buyer.password})).ok()).toBeTruthy();
   await testSql('UPDATE "user" SET "emailVerified"=false WHERE id=$1',[buyer.id]);
@@ -48,12 +49,38 @@ test('expired verification links fail and verification state is enforced on exis
   await c.close();
 });
 
+test('email codes rotate, limit wrong attempts and accept only one concurrent redemption', async ({browser}) => {
+  await clearRates();
+  const c=await browser.newContext({baseURL:origin,ignoreHTTPSErrors:true});
+  const email=`rotation-${Date.now()}@example.test`, password=randomBytes(24).toString('hex');
+  try {
+    expect((await post(c,'sign-up/email',{name:'Code Rotation',email,password})).ok()).toBeTruthy();
+    const first=mailCode(email);
+    const wrong=first === '000000' ? '111111' : '000000';
+    const verify=(otp:string)=>post(c,'email-otp/verify-email',{email,otp});
+    for(let i=0;i<3;i++) expect((await verify(wrong)).status()).toBe(400);
+    await clearRates();
+    expect((await verify(first)).ok()).toBeFalsy();
+    await clearRates();
+    expect((await post(c,'send-verification-email',{email})).ok()).toBeTruthy();
+    const second=mailCode(email);
+    await clearRates();
+    expect((await post(c,'send-verification-email',{email})).ok()).toBeTruthy();
+    const latest=mailCode(email);
+    expect((await verify(second)).ok()).toBeFalsy();
+    const results=await Promise.all([verify(latest),verify(latest)]);
+    expect(results.filter(response=>response.ok())).toHaveLength(1);
+    expect((await me(c)).status()).toBe(401);
+    expect((await post(c,'sign-in/email',{email,password})).ok()).toBeTruthy();
+  } finally {await c.close();}
+});
+
 test('password recovery is neutral, expires, changes password and revokes sessions', async ({browser}) => {
   await clearRates();
   const c=await browser.newContext({baseURL:origin,ignoreHTTPSErrors:true});
   const email=`reset-${Date.now()}@example.test`,password=randomBytes(24).toString('hex');
   expect((await post(c,'sign-up/email',{name:'Password Recovery',email,password})).ok()).toBeTruthy();
-  expect((await c.request.post('/api/account/verify-email',{headers,data:{token:mailToken(email,'verify')}})).ok()).toBeTruthy();
+  expect((await post(c,'email-otp/verify-email',{email,otp:mailCode(email)})).ok()).toBeTruthy();
   expect((await post(c,'sign-in/email',{email,password})).ok()).toBeTruthy();
   // Start a separate recovery window after signup's verification email.
   await clearRates();

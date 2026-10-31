@@ -735,3 +735,6 @@ html:has(.selection-page) {
 .guest-inbox .workspace-panel { padding: 24px; border: 1px solid #deded6; border-radius: 8px; }
 .guest-inbox p, .guest-inbox h3, .auth-card code { overflow-wrap: anywhere; }
 .guest-message { white-space: pre-wrap; }
+
+.workspace-form .demo-payment-confirm { display:flex; flex-direction:row; align-items:flex-start; gap:12px; }
+.workspace-form .demo-payment-confirm input { width:20px; height:20px; flex:0 0 20px; margin-top:3px; accent-color:var(--green,#183f32); }

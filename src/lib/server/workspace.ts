@@ -86,6 +86,8 @@ export async function requestDetail(actor: Actor, id: string): Promise<RequestDe
       : undefined;
   return {
     ...row,
+    demoPaymentsEnabled: ['demo', 'public-demo'].includes(process.env.APP_MODE || ''),
+    payments: await db.prepare('SELECT id,quoteId,amount,createdAt FROM demo_payments WHERE requestId=? ORDER BY createdAt').all(id) as RequestDetail['payments'],
     buyer: { ...buyer, phone: buyer.phone || '' },
     items: await readItems(id),
     quotes,
@@ -160,6 +162,9 @@ async function writeItems(id: string, lines: LineInput[]) {
 function editable(row: RequestSummary, revision: number) {
   if (['COMPLETED', 'CANCELLED'].includes(row.status)) fail('REQUEST_CLOSED', 409);
   if (row.revision !== revision) fail('STALE_RECORD', 409);
+}
+async function unpaid(requestId: string) {
+  if (await getDb().prepare('SELECT id FROM demo_payments WHERE requestId=?').get(requestId)) fail('PAYMENT_LOCKED', 409);
 }
 async function updateRequest(id: string, status: RequestStatus) {
   await getDb()
@@ -282,6 +287,7 @@ export async function mutate(actor: Actor, input: Mutation): Promise<Record<stri
         requireRole(actor, ['SELLER', 'ADMIN']);
         const row = await accessRequest(actor, input.requestId);
         editable(row, input.revision);
+        await unpaid(row.id);
         if (row.status === 'NEW') fail('ASSIGN_FIRST');
         await calculate(input.lines);
         await writeItems(row.id, input.lines);
@@ -293,6 +299,7 @@ export async function mutate(actor: Actor, input: Mutation): Promise<Record<stri
         requireRole(actor, ['SELLER', 'ADMIN']);
         const row = await accessRequest(actor, input.requestId);
         editable(row, input.revision);
+        await unpaid(row.id);
         if (row.status !== 'IN_PROGRESS' || !row.sellerId) fail('INVALID_TRANSITION', 409);
         const result = await calculate(await readItems(row.id));
         const version = (
@@ -318,10 +325,29 @@ export async function mutate(actor: Actor, input: Mutation): Promise<Record<stri
         await event(actor, row.id, 'QUOTED', 'QUOTED');
         return { total: result.total, version };
       }
+      case 'demoPay': {
+        requireRole(actor, ['BUYER']);
+        if (!['demo', 'public-demo'].includes(process.env.APP_MODE || '')) fail('PAYMENT_UNAVAILABLE', 403);
+        const row = await accessRequest(actor, input.requestId);
+        // Retries are idempotent, even after the first request advanced the revision.
+        const existing = await db.prepare('SELECT id,amount FROM demo_payments WHERE requestId=? AND quoteId=? AND buyerId=?').get(row.id, input.quoteId, actor.id);
+        if (existing) return {ok:true, payment:existing};
+        editable(row, input.revision);
+        if (row.status !== 'QUOTED') fail('PAYMENT_UNAVAILABLE', 409);
+        const quote = await db.prepare('SELECT id,total FROM quotes WHERE requestId=? ORDER BY version DESC LIMIT 1').get(row.id) as {id:string; total:number} | undefined;
+        if (!quote || quote.id !== input.quoteId) fail('STALE_QUOTE', 409);
+        const id = randomUUID();
+        await db.prepare('INSERT INTO demo_payments(id,requestId,quoteId,buyerId,amount,createdAt) VALUES(?,?,?,?,?,?)').run(id, row.id, quote.id, actor.id, quote.total, now());
+        await updateRequest(row.id, row.status);
+        await event(actor, row.id, 'DEMO_PAID', row.status);
+        await audit(actor, 'demoPay', row.id);
+        return {ok:true, payment:{id, amount:quote.total}};
+      }
       case 'status': {
         const row = await accessRequest(actor, input.requestId);
         editable(row, input.revision);
         if (actor.role === 'BUYER' && input.status !== 'CANCELLED') fail('FORBIDDEN', 403);
+        if (input.status === 'IN_PROGRESS') await unpaid(row.id);
         if (input.status === 'COMPLETED' && row.status !== 'QUOTED')
           fail('INVALID_TRANSITION', 409);
         if (input.status === 'IN_PROGRESS' && row.status !== 'QUOTED')

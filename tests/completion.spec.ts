@@ -68,6 +68,7 @@ test('authentication returns to selection; explicit guest import persists before
   await page.locator('a[href="/ru/sign-in?returnTo=selection"]').click();
   await page.locator('a[href="/ru/sign-up?returnTo=selection"]').click();
   await page.getByLabel('Имя',{exact:true}).fill('Finder Demo Buyer');
+  await page.locator('[name="phone"]').fill('+7 (700) 123-45-67');
   await page.getByLabel('Email',{exact:true}).fill(`finder-${Date.now()}@alatau.demo`);
   await page.getByLabel('Пароль',{exact:true}).fill(randomBytes(24).toString('base64url'));
   await page.locator('form').getByRole('button').click();

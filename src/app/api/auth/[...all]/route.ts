@@ -22,7 +22,7 @@ const allowed = new Set([
   'sign-in/social',
   'callback/google',
   ...passwordlessEndpoints,
-  'request-password-reset', 'reset-password', 'send-verification-email',
+  'request-password-reset', 'reset-password', 'send-verification-email', 'email-otp/verify-email',
   'two-factor/enable', 'two-factor/verify-totp', 'two-factor/verify-backup-code', 'two-factor/generate-backup-codes',
 ]);
 async function handler(request: Request) {
@@ -89,6 +89,12 @@ async function handler(request: Request) {
       await demoLimit('mail-global', 100, 3600);
     } catch { return Response.json({code:'DEMO_LIMIT'}, {status:429}); }
   }
+  if (request.method === 'POST' && endpoint === 'email-otp/verify-email') {
+    const input = z.object({email:z.email().max(254), otp:z.string().regex(/^\d{6}$/)}).strict().safeParse(payload);
+    if (!input.success) return Response.json({code:'INVALID_INPUT'}, {status:400});
+    try { await limitEntry(request, 'verify-email-code', input.data.email.toLowerCase(), false); }
+    catch { return Response.json({code:'RATE_LIMIT'}, {status:429}); }
+  }
   const verification = ['two-factor/verify-totp', 'two-factor/verify-backup-code'].includes(endpoint);
   let priorSession: Awaited<ReturnType<typeof auth.api.getSession>> = null;
   if (request.method === 'POST' && (endpoint.startsWith('two-factor/') || endpoint === 'change-password')) {
@@ -141,6 +147,7 @@ async function handler(request: Request) {
           { message: 'Invalid registration data', code: 'INVALID_INPUT' },
           { status: 400 },
         );
+      request = new Request(request.url, {method:'POST', headers:request.headers, body:JSON.stringify(parsed.data)});
     } catch {
       return Response.json({ message: 'Invalid JSON', code: 'INVALID_INPUT' }, { status: 400 });
     }

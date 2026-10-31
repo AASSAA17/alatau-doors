@@ -58,6 +58,8 @@ export type RequestSummary = {
   sellerName: string | null;
 };
 export type RequestDetail = RequestSummary & {
+  demoPaymentsEnabled: boolean;
+  payments: {id: string; quoteId: string; amount: number; createdAt: string}[];
   note: string;
   buyer: { name: string; email: string; phone: string };
   items: LineInput[];

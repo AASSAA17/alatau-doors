@@ -37,11 +37,14 @@ const server = https.createServer(
       },
       (response) => {
         res.writeHead(response.statusCode, response.headers);
+        // Preserve an observed rejection even if Next closes an unread upload.
+        res.flushHeaders();
         response.pipe(res);
       },
     );
     upstream.on('error', () => {
       if (!res.headersSent) { res.writeHead(503); res.end('Starting'); }
+      else if (res.statusCode === 413) res.end();
       else res.destroy();
     });
     upstream.end(Buffer.concat(chunks));

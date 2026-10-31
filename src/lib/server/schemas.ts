@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { normalizePhone } from '../phone';
 const short = z.string().trim().min(1).max(120);
 export const lineSchema = z
   .object({
@@ -25,6 +26,7 @@ export const registerSchema = z
     name: z.string().trim().min(2).max(100),
     email: z.email().max(254),
     password: z.string().min(12).max(128),
+    phone: z.string().max(30).refine(value => normalizePhone(value) !== null).transform(value => normalizePhone(value)!),
   })
   .strict();
 export const settingsSchema = z
@@ -87,6 +89,7 @@ export const productSchema = z
   })
   .strict();
 export const mutationSchema = z.discriminatedUnion('action', [
+  z.object({action:z.literal('demoPay'), requestId:z.string().max(100), quoteId:z.string().max(100), revision:z.number().int().positive(), confirm:z.literal(true)}).strict(),
   z.object({ action: z.literal('profile'), ...profileSchema.shape }).strict(),
   z
     .object({ action: z.literal('favorite'), productId: z.string().max(100), saved: z.boolean() })

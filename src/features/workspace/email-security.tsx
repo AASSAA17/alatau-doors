@@ -25,6 +25,10 @@ export function EmailSecurity({ mode }: { mode: 'verify' | 'forgot' | 'reset' })
           const response = await fetch('/api/account/verify-email', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({token})});
           if (!response.ok) throw new Error('INVALID_TOKEN');
           setToken(''); setDone(true); f.setSuccess(t('verified'));
+        } else if (mode === 'verify' && (event.nativeEvent as SubmitEvent).submitter?.getAttribute('value') !== 'resend') {
+          const result = await authClient.emailOtp.verifyEmail({email:String(data.get('email')), otp:String(data.get('code'))});
+          if (result.error) throw new Error(result.error.status === 429 ? 'RATE_LIMIT' : 'INVALID_EMAIL_CODE');
+          setDone(true); f.setSuccess(t('verified'));
         } else if (mode === 'reset') {
           if (!token) throw new Error('INVALID_TOKEN');
           if (data.get('password') !== data.get('confirm')) throw new Error('PASSWORD_MISMATCH');
@@ -35,18 +39,20 @@ export function EmailSecurity({ mode }: { mode: 'verify' | 'forgot' | 'reset' })
           const email = String(data.get('email')); const options = {headers:{'x-alatau-locale':locale}};
           const result = mode === 'forgot' ? await authClient.requestPasswordReset({email}, options) : await authClient.sendVerificationEmail({email}, options);
           if (result.error) throw new Error(result.error.code === 'AUTH_MAIL_UNAVAILABLE' ? 'AUTH_MAIL_UNAVAILABLE' : result.error.status === 429 ? 'RATE_LIMIT' : 'SERVER_ERROR');
-          f.setSuccess(t('mailAccepted'));
+          f.setSuccess(t(mode === 'verify' ? 'codeAccepted' : 'mailAccepted'));
         }
       } catch (error) { f.setError((error as Error).message); }
       finally { f.setBusy(false); }
     }}>
       {(mode === 'forgot' || (mode === 'verify' && !token)) && <label>{w('email')}<input name="email" type="email" autoComplete="email" required maxLength={254}/></label>}
+      {mode === 'verify' && !token && <label>{t('verificationCode')}<input name="code" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} required/></label>}
       {mode === 'reset' && <>
         <label>{w('newPassword')}<input name="password" type="password" autoComplete="new-password" minLength={12} maxLength={128} required/></label>
         <label>{t('confirmPassword')}<input name="confirm" type="password" autoComplete="new-password" minLength={12} maxLength={128} required/></label>
         <small>{w('passwordHint')}</small>
       </>}
-      <button className="primary-button" disabled={f.busy}>{f.busy ? w('saving') : t(mode === 'reset' ? 'savePassword' : mode === 'verify' && token ? 'confirmEmail' : 'sendLink')}</button>
+      <button className="primary-button" disabled={f.busy}>{f.busy ? w('saving') : t(mode === 'reset' ? 'savePassword' : mode === 'verify' ? 'confirmEmail' : 'sendLink')}</button>
+      {mode === 'verify' && !token && <button className="outline-button" type="submit" value="resend" formNoValidate disabled={f.busy}>{t('sendCode')}</button>}
     </form>}
     <Feedback error={f.error} success={f.success}/>
     <p><Link className="text-link" href="/sign-in">{w('signIn')}</Link></p>

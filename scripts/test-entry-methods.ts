@@ -89,7 +89,7 @@ async function main() {
     await owner.query('UPDATE "user" SET role=$1 WHERE email=$2', ['BUYER', linkBody.email]);
     await clearLimits();
     const legacyEmail = 'legacy-password@example.test';
-    const legacy = await post('sign-up/email', { name: 'Legacy Buyer', email: legacyEmail, password: 'Only-a-local-fixture-password-42' });
+    const legacy = await post('sign-up/email', { name: 'Legacy Buyer', phone: '+77001234567', email: legacyEmail, password: 'Only-a-local-fixture-password-42' });
     assert.equal(legacy.status, 200);
     const legacyUser = await session(legacy);
     const passwordBefore = (await owner.query('SELECT password FROM account WHERE "userId"=$1', [legacyUser!.user.id])).rows[0].password;

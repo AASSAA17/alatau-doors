@@ -20,7 +20,7 @@ export async function checkMedia(admin: BrowserContext, buyer: BrowserContext, s
       method: 'POST', rejectUnauthorized: false, agent: false,
       headers: { ...headers, Cookie: cookies, 'Content-Length': 4 * 1024 * 1024 + 1 },
     }, response => { received = true; resolve(response.statusCode); response.resume(); request.destroy(); });
-    request.on('error', () => { if (!received) reject(new Error('Oversized fixture request failed before HTTP response')); });
+    request.on('error', (error: NodeJS.ErrnoException) => { if (!received) reject(new Error('Oversized fixture request failed before HTTP response: ' + (error.code || 'TIMEOUT'))); });
     request.setTimeout(10000, () => request.destroy(new Error('Fixture timeout')));
     request.end(Buffer.alloc(4 * 1024 * 1024 + 1));
   });

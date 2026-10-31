@@ -87,4 +87,8 @@ export function migrateSqliteBusiness() {
     db.exec('CREATE TABLE media(id TEXT PRIMARY KEY, data BLOB NOT NULL, width INTEGER NOT NULL CHECK(width BETWEEN 1 AND 1800), height INTEGER NOT NULL CHECK(height BETWEEN 1 AND 1800), size INTEGER NOT NULL CHECK(size BETWEEN 1 AND 1048576), createdBy TEXT NOT NULL REFERENCES user(id), createdAt TEXT NOT NULL);');
     db.prepare('INSERT INTO schema_migrations VALUES(4,?)').run(new Date().toISOString());
   })();
+  if (!db.prepare('SELECT version FROM schema_migrations WHERE version=5').get()) db.transaction(() => {
+    db.exec('CREATE TABLE demo_payments(id TEXT PRIMARY KEY, requestId TEXT NOT NULL REFERENCES requests(id), quoteId TEXT NOT NULL UNIQUE REFERENCES quotes(id), buyerId TEXT NOT NULL REFERENCES user(id), amount INTEGER NOT NULL CHECK(amount >= 0), createdAt TEXT NOT NULL); CREATE INDEX demo_payments_request ON demo_payments(requestId);');
+    db.prepare('INSERT INTO schema_migrations VALUES(5,?)').run(new Date().toISOString());
+  })();
 }
